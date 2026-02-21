@@ -22,7 +22,7 @@ class AppTheme {
       ),
 
       // Typography
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         displayLarge: AppTextStyles.heading1,
         displayMedium: AppTextStyles.heading2,
         displaySmall: AppTextStyles.heading3,
@@ -33,11 +33,11 @@ class AppTheme {
       ),
 
       // App Bar
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: AppTextStyles.heading3,
       ),
 
