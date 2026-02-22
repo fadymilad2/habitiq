@@ -13,7 +13,7 @@ class RegisterWithEmail implements UseCase<User, RegisterParams> {
 
   @override
   Future<Either<Failure, User>> call(RegisterParams params) async {
-    return await repository.registerWithEmail(
+    return repository.registerWithEmail(
       email: params.email,
       password: params.password,
       displayName: params.displayName,

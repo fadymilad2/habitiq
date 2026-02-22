@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTextStyles {
+  AppTextStyles._();
   static String? get fontFamily => GoogleFonts.spaceGrotesk().fontFamily;
 
   static TextStyle get heading1 => GoogleFonts.spaceGrotesk(

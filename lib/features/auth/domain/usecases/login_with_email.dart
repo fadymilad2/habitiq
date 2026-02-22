@@ -13,7 +13,7 @@ class LoginWithEmail implements UseCase<User, LoginParams> {
 
   @override
   Future<Either<Failure, User>> call(LoginParams params) async {
-    return await repository.loginWithEmail(
+    return repository.loginWithEmail(
       email: params.email,
       password: params.password,
     );

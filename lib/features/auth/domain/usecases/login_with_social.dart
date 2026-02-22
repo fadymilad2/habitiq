@@ -14,9 +14,9 @@ class LoginWithSocial implements UseCase<User, SocialLoginParams> {
   @override
   Future<Either<Failure, User>> call(SocialLoginParams params) async {
     if (params.provider == SocialProvider.google) {
-      return await repository.loginWithGoogle();
+      return repository.loginWithGoogle();
     } else {
-      return await repository.loginWithApple();
+      return repository.loginWithApple();
     }
   }
 }
