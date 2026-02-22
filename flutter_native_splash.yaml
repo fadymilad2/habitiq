@@ -1,0 +1,18 @@
+flutter_native_splash:
+  # لون الخلفية (اكتب كود اللون الغامق بتاعك هنا)
+  color: "#0F0C20"
+  # مسار اللوجو بتاعك
+  image: assets/images/logo.png
+  # إخفاء شريط الحالة (البطارية والشبكة) عشان يبقى الشاشة كلها سبلاش
+  fullscreen: true
+
+  # لو عامل ثيم فاتح وغامق، ممكن تحدد لون وصورة للدارك ثيم
+  color_dark: "#0F0C20"
+  image_dark: assets/images/logo.png
+
+  # دعم الأندرويد 12+ (عشان بيعملوا سبلاش بشكل مختلف شوية)
+  android_12:
+    color: "#0F0C20"
+    image: assets/images/logo.png
+    color_dark: "#0F0C20"
+    image_dark: assets/images/logo.png
