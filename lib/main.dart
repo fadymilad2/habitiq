@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_iq/features/splash/presentation/pages/splash_view.dart';
 import 'core/theme/app_theme.dart';
 
 void main() {
@@ -14,14 +15,7 @@ class HabitIq extends StatelessWidget {
       title: 'HabitIQ',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: Scaffold(
-        body: Center(
-          child: Text(
-            'Habit IQ',
-            style: Theme.of(context).textTheme.displayLarge,
-          ),
-        ),
-      ),
+      home: SplashView(),
     );
   }
 }
