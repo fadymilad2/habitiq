@@ -25,6 +25,7 @@ class SplashView extends StatelessWidget {
           }
         },
         child: Scaffold(
+<<<<<<< HEAD
           body: AppBackground(
             child: Stack(
               children: [
@@ -56,6 +57,44 @@ class SplashView extends StatelessWidget {
                 const SplashLoadingBar(),
               ],
             ),
+=======
+          body: Stack(
+            children: [
+              // الخلفية الموحدة
+              const AppBackground(),
+              // المحتوى فوق الخلفية
+              Stack(
+                children: [
+                  Center(
+                    // الأنيميشن (Fade-in & Scale)
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 1500),
+                      builder: (context, value, child) {
+                        return Opacity(
+                          opacity: value,
+                          child: Transform.scale(
+                            scale: 0.8 + (value * 0.2),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SplashLogo(),
+                          SizedBox(height: 32),
+                          SplashTitle(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // شريط التحميل بأسفل الشاشة
+                  const SplashLoadingBar(),
+                ],
+              ),
+            ],
+>>>>>>> d2dbf1e52be77c326b05f18495e874f0eca78399
           ),
         ),
       ),

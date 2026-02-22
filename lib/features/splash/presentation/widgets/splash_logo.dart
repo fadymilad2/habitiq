@@ -5,6 +5,7 @@ class SplashLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     return SizedBox(
       width: 160,
       height: 160,
@@ -16,6 +17,18 @@ class SplashLogo extends StatelessWidget {
         child: Center(
           child: Image.asset('assets/images/logo.png', width: 80, height: 80),
         ),
+=======
+    return Container(
+      width: 160,
+      height: 160,
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1),
+      ),
+      child: Center(
+        child: Image.asset('assets/images/logo.png', width: 80, height: 80),
+>>>>>>> d2dbf1e52be77c326b05f18495e874f0eca78399
       ),
     );
   }
