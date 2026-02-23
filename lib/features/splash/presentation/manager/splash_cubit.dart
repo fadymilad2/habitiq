@@ -9,7 +9,7 @@ class SplashCubit extends Cubit<SplashState> {
   Future<void> checkUserStatus() async {
     emit(SplashLoading());
 
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(milliseconds: 2700));
 
     emit(SplashNavigateToOnboarding());
   }

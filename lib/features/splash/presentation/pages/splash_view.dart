@@ -6,9 +6,42 @@ import '../../../../core/widgets/app_background.dart';
 import '../widgets/splash_logo.dart';
 import '../widgets/splash_title.dart';
 import '../widgets/splash_loading_bar.dart';
+import '../../../onboarding/presentation/pages/onboarding_view.dart';
 
-class SplashView extends StatelessWidget {
+class SplashView extends StatefulWidget {
   const SplashView({super.key});
+
+  @override
+  State<SplashView> createState() => _SplashViewState();
+}
+
+class _SplashViewState extends State<SplashView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _animation = CurveTween(curve: Curves.easeOut).animate(_controller);
+
+    // نفس الكلام هنا، الأنيميشن مش هيبدأ غير لما الشاشة تبقى ظاهرة ومستقرة 100%
+    WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +50,14 @@ class SplashView extends StatelessWidget {
       child: BlocListener<SplashCubit, SplashState>(
         listener: (context, state) {
           if (state is SplashNavigateToOnboarding) {
-            // Navigator.pushReplacementNamed(context, '/onboarding');
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (_, a, b) => const OnboardingView(),
+                transitionsBuilder: (_, animation, b, child) =>
+                    FadeTransition(opacity: animation, child: child),
+                transitionDuration: const Duration(milliseconds: 600),
+              ),
+            );
           } else if (state is SplashNavigateToLogin) {
             // Navigator.pushReplacementNamed(context, '/login');
           } else if (state is SplashNavigateToHome) {
@@ -29,15 +69,13 @@ class SplashView extends StatelessWidget {
             child: Stack(
               children: [
                 Center(
-                  // الأنيميشن (Fade-in & Scale)
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween<double>(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 1500),
-                    builder: (context, value, child) {
+                  child: AnimatedBuilder(
+                    animation: _animation,
+                    builder: (context, child) {
                       return Opacity(
-                        opacity: value,
+                        opacity: _animation.value,
                         child: Transform.scale(
-                          scale: 0.8 + (value * 0.2),
+                          scale: 0.8 + (_animation.value * 0.2),
                           child: child,
                         ),
                       );

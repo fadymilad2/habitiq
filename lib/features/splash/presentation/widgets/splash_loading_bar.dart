@@ -62,7 +62,7 @@ class _AnimatedLoadingBarState extends State<AnimatedLoadingBar>
   late AnimationController _controller;
   late Animation<double> _animation;
 
-  @override
+ @override
   void initState() {
     super.initState();
     _controller = AnimationController(
@@ -70,9 +70,14 @@ class _AnimatedLoadingBarState extends State<AnimatedLoadingBar>
       duration: const Duration(seconds: 2),
     );
     _animation = CurveTween(curve: Curves.easeInOut).animate(_controller);
-    _controller.forward();
-  }
 
+    // الأداة السحرية: هتستنى الشاشة السودة تختفي والواجهة تترسم بالكامل قدام اليوزر
+    WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
   @override
   void dispose() {
     _controller.dispose();

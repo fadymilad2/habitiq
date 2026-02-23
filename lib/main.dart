@@ -3,6 +3,7 @@ import 'package:habit_iq/features/splash/presentation/pages/splash_view.dart';
 import 'core/theme/app_theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const HabitIq());
 }
 
