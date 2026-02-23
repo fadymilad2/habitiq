@@ -62,11 +62,11 @@ class OnboardingActionButton extends StatelessWidget {
                     Text(
                       _label,
                       style: AppTextStyles.button.copyWith(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
                     Icon(_icon, color: Colors.white, size: 20),
                   ],
                 ),

@@ -39,7 +39,7 @@ class OnboardingPage extends StatelessWidget {
                 textAlign: TextAlign.center,
                 text: TextSpan(
                   style: AppTextStyles.heading1.copyWith(
-                    fontSize: 30,
+                    fontSize: 36,
                     fontWeight: FontWeight.w800,
                     height: 1.25,
                   ),
@@ -56,7 +56,7 @@ class OnboardingPage extends StatelessWidget {
                         child: Text(
                           content.titleAccent,
                           style: AppTextStyles.heading1.copyWith(
-                            fontSize: 30,
+                            fontSize: 36,
                             fontWeight: FontWeight.w800,
                             height: 1.25,
                             color: Colors.white,
@@ -79,7 +79,7 @@ class OnboardingPage extends StatelessWidget {
                 content.body,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  fontSize: 14,
+                  fontSize: 16,
                   height: 1.6,
                   color: AppColors.textSecondary,
                 ),
