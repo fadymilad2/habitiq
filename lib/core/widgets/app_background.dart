@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../../../../core/theme/app_colors.dart'; // مسارك الصح
 
-/// خلفية التطبيق الموحدة — 3 طبقات: لون صلب + إضاءتين من الزوايا
-/// تستخدم في كل الشاشات عشان تدي إحساس موحد
 class AppBackground extends StatelessWidget {
   const AppBackground({super.key, this.child});
 
@@ -10,29 +8,20 @@ class AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // الطبقة الأساسية: الخلفية الصلبة
-        SizedBox.expand(child: ColoredBox(color: AppColors.background)),
-        // طبقة 1: Radial Glow من فوق شمال
-        SizedBox.expand(
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: AppColors.backgroundGlowTopLeft,
-            ),
-          ),
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppColors.background, // لون احتياطي
+        image: DecorationImage(
+          image: AssetImage(
+            'assets/images/bg_glow.png',
+          ), // صورة الخلفية الناعمة من فِجما
+          fit: BoxFit.cover,
         ),
-        // طبقة 2: Radial Glow من تحت يمين
-        SizedBox.expand(
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: AppColors.backgroundGlowBottomRight,
-            ),
-          ),
-        ),
-        // المحتوى فوق الخلفية
-        ?child,
-      ],
+      ),
+      // لو في محتوى هنعرضه، مفيش خلاص
+      child: child,
     );
   }
 }

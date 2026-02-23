@@ -39,42 +39,37 @@ class AppColors {
 
   // Custom Gradients
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF590DF2), Color(0xFF8B47FF)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFFA78BFA), // موف فاتح وفاقع من فوق
+      Color(0xFF590DF2), // موف أغمق وأزرق شوية من تحت
+    ],
+    begin: Alignment.topCenter, // نخليه يبدأ من النص فوق
+    end: Alignment.bottomCenter, // وينتهي في النص تحت
   );
 
   // Background Glow
-  static const Color backgroundGlow = Color(0xFF381E72);
-
+  static const Color backgroundGlow = Color(
+    0xFF590DF2,
+  ); // لون الإضاءة الناري الموحد
+  // إضاءة قوية من فوق شمال
+  // إضاءة ناعمة من فوق شمال
   static const RadialGradient backgroundGlowTopLeft = RadialGradient(
     center: Alignment(-1.0, -1.0),
-    radius: 1.2,
+    radius: 1.5, // كبرنا نص القطر عشان تسيح بنعومة أكتر
     colors: [
-      Color(0x99381E72),
-      Color(0x80381E72),
-      Color(0x66381E72),
-      Color(0x4D381E72),
-      Color(0x33381E72),
-      Color(0x1A381E72),
-      Color(0x0D381E72),
-      Color(0x00161022),
+      Color(0x66590DF2), // 40% شفافة عشان متبقاش فاقعة
+      Color(0x00161022), // 0% شفافة (بتختفي تماماً في لون الخلفية)
     ],
-    stops: [0.0, 0.12, 0.25, 0.38, 0.52, 0.68, 0.85, 1.0],
+    // شيلنا الـ stops الكتير عشان فلاتر يعمل تدرج ناعم لوحده
   );
 
+  // إضاءة أهدى كمان من تحت يمين
   static const RadialGradient backgroundGlowBottomRight = RadialGradient(
     center: Alignment(1.0, 1.0),
-    radius: 1.0,
+    radius: 1.2,
     colors: [
-      Color(0x66381E72),
-      Color(0x55381E72),
-      Color(0x44381E72),
-      Color(0x33381E72),
-      Color(0x22381E72),
-      Color(0x11381E72),
-      Color(0x00161022),
+      Color(0x4D590DF2), // 30% شفافة (أهدى من اللي فوق)
+      Color(0x00161022), // 0% شفافة
     ],
-    stops: [0.0, 0.15, 0.3, 0.48, 0.65, 0.82, 1.0],
   );
 }
