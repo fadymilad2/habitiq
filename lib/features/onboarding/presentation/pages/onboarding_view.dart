@@ -5,6 +5,7 @@ import '../widgets/onboarding_top_bar.dart';
 import '../widgets/onboarding_dots_indicator.dart';
 import '../widgets/onboarding_action_button.dart';
 import '../../data/models/onboarding_content.dart';
+import '../../../auth/presentation/pages/auth_view.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -30,12 +31,22 @@ class _OnboardingViewState extends State<OnboardingView> {
         curve: Curves.easeInOutCubic,
       );
     } else {
-      debugPrint('🚀 Onboarding complete — navigate to auth/home');
+      _navigateToAuth();
     }
   }
 
-  void _onSkipTapped() {
-    debugPrint('⏭ Skipped onboarding — navigate to auth/home');
+  void _onSkipTapped() => _navigateToAuth();
+
+  /// Navigates to the Auth screen, removing the entire back-stack.
+  void _navigateToAuth() {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, a, b) => const AuthView(),
+        transitionsBuilder: (_, animation, b, child) =>
+            FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
   }
 
   bool get _isLastPage => _currentPage == onboardingPages.length - 1;

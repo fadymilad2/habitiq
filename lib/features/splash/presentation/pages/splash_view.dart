@@ -7,6 +7,7 @@ import '../widgets/splash_logo.dart';
 import '../widgets/splash_title.dart';
 import '../widgets/splash_loading_bar.dart';
 import '../../../onboarding/presentation/pages/onboarding_view.dart';
+import '../../../auth/presentation/pages/auth_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -59,7 +60,14 @@ class _SplashViewState extends State<SplashView>
               ),
             );
           } else if (state is SplashNavigateToLogin) {
-            // Navigator.pushReplacementNamed(context, '/login');
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (_, a, b) => const AuthView(),
+                transitionsBuilder: (_, animation, b, child) =>
+                    FadeTransition(opacity: animation, child: child),
+                transitionDuration: const Duration(milliseconds: 600),
+              ),
+            );
           } else if (state is SplashNavigateToHome) {
             // Navigator.pushReplacementNamed(context, '/home');
           }
