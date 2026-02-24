@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_background.dart';
+import '../../../home/presentation/pages/home_view.dart';
 import '../widgets/auth_form_card.dart';
 import '../widgets/auth_guest_option.dart';
 import '../widgets/auth_header.dart';
@@ -70,12 +71,28 @@ class _AuthViewState extends State<AuthView>
   }
 
   /// Validates the form then runs the auth action.
-  /// Replace the placeholder delay with a real BLoC / use-case call.
+  /// Replace the [Future.delayed] stub with a real BLoC / use-case call.
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2)); // TODO: real auth call
-    if (mounted) setState(() => _isLoading = false);
+
+    // ── Placeholder: simulate a 2-second network call ─────────────────────
+    await Future.delayed(const Duration(seconds: 2));
+    // TODO: replace ↑ with: await context.read<AuthCubit>().login(email, pass);
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    // ── Navigate to Home, removing the entire auth back-stack ─────────────
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const HomeView(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
   }
 
   void _onGoogleSignIn() {
