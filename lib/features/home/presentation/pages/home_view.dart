@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../domain/models/habit_model.dart';
@@ -7,6 +6,7 @@ import '../widgets/add_habit_fab.dart';
 import '../widgets/daily_progress_ring.dart';
 import '../widgets/floating_nav_bar.dart';
 import '../widgets/habit_card.dart';
+import '../widgets/habits_section_header.dart';
 import '../widgets/home_header.dart';
 
 /// The main Home Screen.
@@ -92,36 +92,14 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
-                // "Your Habits" header row
+                // "Your Habits" section header
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Your Habits',
-                          style: GoogleFonts.spaceGrotesk(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            // TODO: navigate to full habit list
-                          },
-                          child: Text(
-                            'VIEW ALL',
-                            style: GoogleFonts.spaceGrotesk(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: HabitsSectionHeader(
+                      onViewAll: () {
+                        // TODO: navigate to full habit list
+                      },
                     ),
                   ),
                 ),
