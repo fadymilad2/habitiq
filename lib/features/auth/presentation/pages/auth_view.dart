@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_background.dart';
-import '../../../home/presentation/pages/home_view.dart';
+import 'package:habit_iq/features/dashboard/presentation/pages/main_dashboard_view.dart';
 import '../widgets/auth_form_card.dart';
 import '../widgets/auth_guest_option.dart';
 import '../widgets/auth_header.dart';
@@ -87,7 +87,7 @@ class _AuthViewState extends State<AuthView>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const HomeView(),
+            const MainDashboardView(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 500),
@@ -104,7 +104,15 @@ class _AuthViewState extends State<AuthView>
   }
 
   void _onGuestTap() {
-    // TODO: navigate to home as guest
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const MainDashboardView(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────

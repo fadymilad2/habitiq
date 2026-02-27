@@ -244,7 +244,7 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
                     height: 160,
                     child: AnimatedBuilder(
                       animation: _glowAnim,
-                      builder: (_, __) => LineChart(
+                      builder: (_, _) => LineChart(
                         _buildChart(),
                         duration: const Duration(milliseconds: 500),
                       ),

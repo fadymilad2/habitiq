@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
 import 'package:habit_iq/core/theme/app_text_styles.dart';
+import 'package:habit_iq/features/profile/presentation/pages/profile_view.dart';
 
 class AnalyticsHeader extends StatelessWidget {
   const AnalyticsHeader({super.key});
@@ -35,10 +36,20 @@ class AnalyticsHeader extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: const Icon(
-                Icons.calendar_month_rounded,
-                color: AppColors.textSecondary,
-                size: 20,
+              child:  IconButton(
+                icon: const Icon(
+                  Icons.person,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileView(),
+                    ),
+                  );
+                },
               ),
             ),
           ),

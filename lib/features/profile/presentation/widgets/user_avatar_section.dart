@@ -34,7 +34,7 @@ class UserAvatarSection extends StatelessWidget {
                     width: 100,
                     height: 100,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
+                    errorBuilder: (_, _, _) => const Icon(
                       Icons.person,
                       size: 56,
                       color: AppColors.textSecondary,
