@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_iq/features/profile/presentation/pages/profile_view.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../analytics/presentation/pages/analytics_view.dart';
@@ -153,12 +154,9 @@ class _HomeViewState extends State<HomeView> {
                 ),
 
                 // ── 3: Profile (placeholder) ──────────────────────────────
-                const Center(
-                  child: Text(
-                    'Profile\nComing soon',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
+                Padding(
+                  padding: EdgeInsets.only(top: topPadding),
+                  child: const ProfileView(),
                 ),
               ],
             ),
