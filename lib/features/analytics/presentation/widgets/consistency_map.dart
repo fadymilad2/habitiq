@@ -28,7 +28,7 @@ List<List<int>> _generateData() {
 final _heatmapData = _generateData();
 
 // ---------------------------------------------------------------------------
-// Intensity → opacity mapping
+// Intensity → valwithValues mapping
 // ---------------------------------------------------------------------------
 const _opacities = [0.06, 0.25, 0.45, 0.68, 1.0];
 
@@ -47,12 +47,12 @@ class ConsistencyMap extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.2),
+            color: AppColors.primary.withValues(alpha: 0.2),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               blurRadius: 24,
               spreadRadius: 0,
             ),
@@ -77,7 +77,7 @@ class ConsistencyMap extends StatelessWidget {
                     height: 12,
                     margin: const EdgeInsets.only(right: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(op),
+                      color: AppColors.primary.withValues(alpha: op),
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -137,17 +137,17 @@ class _HeatCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final opacity = _opacities[intensity.clamp(0, 4)];
+    final vvalwithValues = _opacities[intensity.clamp(0, 4)];
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(opacity),
+        color: AppColors.primary.withValues(alpha: vvalwithValues),
         borderRadius: BorderRadius.circular(4),
         boxShadow: intensity >= 3
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3 * opacity),
+                  color: AppColors.primary.withValues(alpha: 0.3 * vvalwithValues),
                   blurRadius: 6,
                   spreadRadius: 0,
                 ),

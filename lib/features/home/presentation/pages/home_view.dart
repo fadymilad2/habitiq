@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../analytics/presentation/pages/analytics_view.dart';
+import '../../../mood/presentation/pages/ai_mood_view.dart';
 import '../../../habit/presentation/pages/new_habit_view.dart';
 import '../../domain/models/habit_model.dart';
 import '../widgets/add_habit_fab.dart';
@@ -145,13 +146,10 @@ class _HomeViewState extends State<HomeView> {
                   child: const AnalyticsView(),
                 ),
 
-                // ── 2: AI (placeholder) ───────────────────────────────────
-                const Center(
-                  child: Text(
-                    'AI\nComing soon',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
+                // ── 2: AI Mood & Insights ─────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.only(top: topPadding),
+                  child: const AIMoodView(),
                 ),
 
                 // ── 3: Profile (placeholder) ──────────────────────────────

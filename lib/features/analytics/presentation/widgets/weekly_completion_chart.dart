@@ -153,15 +153,15 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.surface.withOpacity(0.85),
+              color: AppColors.surface.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: AppColors.primary.withOpacity(0.25),
+                color: AppColors.primary.withValues(alpha: 0.25),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.12),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   blurRadius: 32,
                   spreadRadius: 0,
                 ),
@@ -202,7 +202,9 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.success.withOpacity(0.15),
+                                    color: AppColors.success.withValues(
+                                      alpha: 0.15,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(
@@ -242,7 +244,7 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
                     height: 160,
                     child: AnimatedBuilder(
                       animation: _glowAnim,
-                      builder: (_, _a) => LineChart(
+                      builder: (_, __) => LineChart(
                         _buildChart(),
                         duration: const Duration(milliseconds: 500),
                       ),
@@ -319,13 +321,13 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.primary.withOpacity(0.35),
-                AppColors.primary.withOpacity(0.0),
+                AppColors.primary.withValues(alpha: 0.35),
+                AppColors.primary.withValues(alpha: 0.0),
               ],
             ),
           ),
           shadow: Shadow(
-            color: AppColors.primary.withOpacity(0.55 * _glowAnim.value),
+            color: AppColors.primary.withValues(alpha: 0.55 * _glowAnim.value),
             blurRadius: 14,
           ),
         ),
@@ -412,7 +414,10 @@ class _SegmentToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -457,7 +462,7 @@ class _Pill extends StatelessWidget {
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.45),
+                    color: AppColors.primary.withValues(alpha: 0.45),
                     blurRadius: 10,
                     spreadRadius: 0,
                   ),

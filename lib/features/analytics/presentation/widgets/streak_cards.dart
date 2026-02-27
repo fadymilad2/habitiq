@@ -15,7 +15,7 @@ class StreakCards extends StatelessWidget {
           Expanded(
             child: _StreakCard(
               icon: '🔥',
-              iconBgColor: const Color(0xFFFF6B2B).withOpacity(0.15),
+              iconBgColor: const Color(0xFFFF6B2B).withValues(alpha: 0.15),
               value: '12',
               label: 'Current Streak',
               glowColor: const Color(0xFFFF6B2B),
@@ -25,7 +25,7 @@ class StreakCards extends StatelessWidget {
           Expanded(
             child: _StreakCard(
               icon: '🏆',
-              iconBgColor: const Color(0xFFFFBF24).withOpacity(0.15),
+              iconBgColor: const Color(0xFFFFBF24).withValues(alpha: 0.15),
               value: '45',
               label: 'Best Streak',
               glowColor: const Color(0xFFFFBF24),
@@ -60,12 +60,12 @@ class _StreakCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.15),
+          color: AppColors.primary.withValues(alpha: 0.15),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: glowColor.withOpacity(0.08),
+            color: glowColor.withValues(alpha: 0.08),
             blurRadius: 20,
             spreadRadius: 0,
           ),
