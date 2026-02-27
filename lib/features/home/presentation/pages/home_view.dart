@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_background.dart';
+import '../../../analytics/presentation/pages/analytics_view.dart';
+import '../../../habit/presentation/pages/new_habit_view.dart';
 import '../../domain/models/habit_model.dart';
 import '../widgets/add_habit_fab.dart';
 import '../widgets/daily_progress_ring.dart';
@@ -38,7 +40,23 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _onAddHabit() {
-    // TODO: navigate to Add Habit screen / show bottom sheet
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const NewHabitView(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final tween = Tween(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).chain(CurveTween(curve: Curves.easeOutCubic));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    );
   }
 
   /// Ratio of completed habits (0.0 – 1.0).
@@ -51,6 +69,7 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
@@ -59,69 +78,88 @@ class _HomeViewState extends State<HomeView> {
       body: AppBackground(
         child: Stack(
           children: [
-            // ── Scrollable content ─────────────────────────────────────────
-            CustomScrollView(
-              slivers: [
-                // Extra top padding for safe area
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).padding.top + 20,
-                  ),
-                ),
-
-                // Header
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: HomeHeader(
-                      userName: 'Alex',
-                      level: 12,
-                      levelProgress: 0.45,
-                      streakCount: 14,
+            // ── IndexedStack: one page per nav tab ────────────────────────
+            IndexedStack(
+              index: _navIndex,
+              children: [
+                // ── 0: Home ───────────────────────────────────────────────
+                CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: SizedBox(height: topPadding + 20),
                     ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-                // Progress Ring
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: DailyProgressRing(percent: _dailyProgress),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-                // "Your Habits" section header
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: HabitsSectionHeader(
-                      onViewAll: () {
-                        // TODO: navigate to full habit list
-                      },
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-                // Habits list
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    20,
-                    0,
-                    20,
-                    // Extra bottom padding so last card is not hidden behind the nav bar
-                    bottomPadding + 100,
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => HabitCard(
-                        habit: _habits[index],
-                        onToggle: () => _toggleHabit(_habits[index].id),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: HomeHeader(
+                          userName: 'Alex',
+                          level: 12,
+                          levelProgress: 0.45,
+                          streakCount: 14,
+                        ),
                       ),
-                      childCount: _habits.length,
                     ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: DailyProgressRing(percent: _dailyProgress),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: HabitsSectionHeader(
+                          onViewAll: () {
+                            // TODO: navigate to full habit list
+                          },
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        0,
+                        20,
+                        bottomPadding + 100,
+                      ),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => HabitCard(
+                            habit: _habits[index],
+                            onToggle: () => _toggleHabit(_habits[index].id),
+                          ),
+                          childCount: _habits.length,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // ── 1: Analytics (Stats) ──────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.only(top: topPadding),
+                  child: const AnalyticsView(),
+                ),
+
+                // ── 2: AI (placeholder) ───────────────────────────────────
+                const Center(
+                  child: Text(
+                    'AI\nComing soon',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+
+                // ── 3: Profile (placeholder) ──────────────────────────────
+                const Center(
+                  child: Text(
+                    'Profile\nComing soon',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
               ],
@@ -138,16 +176,16 @@ class _HomeViewState extends State<HomeView> {
                 clipBehavior: Clip.none,
                 children: [
                   // Glass nav bar — all 4 icons evenly visible
-                  FloatingNavBar(
-                    selectedIndex: _navIndex,
-                    onItemTap: (i) => setState(() => _navIndex = i),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 30),
+                    child: FloatingNavBar(
+                      selectedIndex: _navIndex,
+                      onItemTap: (i) => setState(() => _navIndex = i),
+                    ),
                   ),
 
                   // FAB centred, raised so half its height (34px) sits above bar
-                  Positioned(
-                    top: -34,
-                    child: AddHabitFab(onPressed: _onAddHabit),
-                  ),
+                  AddHabitFab(onPressed: _onAddHabit),
                 ],
               ),
             ),
