@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:habit_iq/core/theme/app_text_styles.dart';
-import 'package:habit_iq/features/profile/presentation/pages/profile_view.dart';
+import 'package:habit_iq/features/dashboard/presentation/manager/dashboard_cubit.dart';
 
 class AnalyticsHeader extends StatelessWidget {
   const AnalyticsHeader({super.key});
@@ -36,19 +37,14 @@ class AnalyticsHeader extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child:  IconButton(
+              child: IconButton(
                 icon: const Icon(
                   Icons.person,
                   color: AppColors.textSecondary,
                   size: 20,
                 ),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfileView(),
-                    ),
-                  );
+                  context.read<DashboardCubit>().changeTab(3);
                 },
               ),
             ),
