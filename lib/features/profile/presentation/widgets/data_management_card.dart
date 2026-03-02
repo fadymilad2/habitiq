@@ -82,7 +82,15 @@ class DataManagementCard extends StatelessWidget {
                           ),
                           // Refresh button
                           GestureDetector(
-                            onTap: () {},
+                            onTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Syncing...'),
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
                             child: Container(
                               width: 36,
                               height: 36,

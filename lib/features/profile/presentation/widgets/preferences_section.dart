@@ -13,27 +13,23 @@ class _PrefTile {
     required this.title,
     required this.subtitle,
     this.trailingLabel,
+    this.isSwitch = false,
   });
   final IconData icon;
   final Color iconBg;
   final String title;
   final String subtitle;
   final String? trailingLabel;
+  final bool isSwitch;
 }
 
 const _tiles = [
   _PrefTile(
     icon: Icons.notifications_outlined,
     iconBg: Color(0xFFFF6B35),
-    title: 'Notifications',
-    subtitle: 'Manage alerts & reminders',
-  ),
-  _PrefTile(
-    icon: Icons.palette_outlined,
-    iconBg: Color(0xFF590DF2),
-    title: 'Theme',
-    subtitle: 'Dark mode & colors',
-    trailingLabel: 'Deep Purple',
+    title: 'Pause All Reminders',
+    subtitle: 'Mute habits notifications',
+    isSwitch: true,
   ),
   _PrefTile(
     icon: Icons.lock_outline_rounded,
@@ -104,16 +100,26 @@ class PreferencesSection extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // Individual tile
 // ─────────────────────────────────────────────────────────────────────────────
-class _PreferenceTile extends StatelessWidget {
+class _PreferenceTile extends StatefulWidget {
   const _PreferenceTile({required this.tile, required this.isLast});
   final _PrefTile tile;
   final bool isLast;
+
+  @override
+  State<_PreferenceTile> createState() => _PreferenceTileState();
+}
+
+class _PreferenceTileState extends State<_PreferenceTile> {
+  bool _switchValue = false;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         InkWell(
-          onTap: () {},
+          onTap: widget.tile.isSwitch
+              ? () => setState(() => _switchValue = !_switchValue)
+              : () {},
           borderRadius: BorderRadius.circular(20),
           splashColor: AppColors.primary.withValues(alpha: 0.08),
           highlightColor: AppColors.primary.withValues(alpha: 0.04),
@@ -126,10 +132,14 @@ class _PreferenceTile extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: tile.iconBg.withValues(alpha: 0.18),
+                    color: widget.tile.iconBg.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(tile.icon, color: tile.iconBg, size: 19),
+                  child: Icon(
+                    widget.tile.icon,
+                    color: widget.tile.iconBg,
+                    size: 19,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 // Text
@@ -138,7 +148,7 @@ class _PreferenceTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        tile.title,
+                        widget.tile.title,
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -147,7 +157,7 @@ class _PreferenceTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        tile.subtitle,
+                        widget.tile.subtitle,
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
@@ -157,29 +167,37 @@ class _PreferenceTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Trailing: optional label + chevron
-                if (tile.trailingLabel != null) ...[
-                  Text(
-                    tile.trailingLabel!,
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.primary,
+                // Trailing: Switch OR optional label + chevron
+                if (widget.tile.isSwitch)
+                  Switch(
+                    value: _switchValue,
+                    onChanged: (val) => setState(() => _switchValue = val),
+                    activeColor: AppColors.primary,
+                  )
+                else ...[
+                  if (widget.tile.trailingLabel != null) ...[
+                    Text(
+                      widget.tile.trailingLabel!,
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary,
+                      ),
                     ),
+                    const SizedBox(width: 4),
+                  ],
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                    size: 20,
                   ),
-                  const SizedBox(width: 4),
                 ],
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textSecondary,
-                  size: 20,
-                ),
               ],
             ),
           ),
         ),
         // Divider (except after last tile)
-        if (!isLast)
+        if (!widget.isLast)
           Divider(
             height: 1,
             thickness: 1,
@@ -191,4 +209,3 @@ class _PreferenceTile extends StatelessWidget {
     );
   }
 }
-

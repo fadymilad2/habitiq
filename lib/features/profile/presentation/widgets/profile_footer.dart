@@ -10,7 +10,15 @@ class ProfileFooter extends StatelessWidget {
       children: [
         // Log out button
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Logging out...'),
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
           style: TextButton.styleFrom(
             foregroundColor: AppColors.error,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),

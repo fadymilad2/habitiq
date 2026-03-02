@@ -1,7 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
+import 'package:habit_iq/features/dashboard/presentation/manager/dashboard_cubit.dart';
 
 // ---------------------------------------------------------------------------
 // Dummy mood-vs-habits trend data
@@ -78,13 +80,18 @@ class MoodCorrelationCard extends StatelessWidget {
                       width: 1,
                     ),
                   ),
-                  child: Text(
-                    'DETAILS',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                      letterSpacing: 1.2,
+                  child: InkWell(
+                    onTap: () {
+                      context.read<DashboardCubit>().changeTab(1);
+                    },
+                    child: Text(
+                      'DETAILS',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                        letterSpacing: 1.2,
+                      ),
                     ),
                   ),
                 ),
