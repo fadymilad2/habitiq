@@ -8,6 +8,7 @@ import 'package:habit_iq/features/analytics/presentation/manager/analytics_cubit
 import 'package:habit_iq/features/dashboard/presentation/manager/dashboard_cubit.dart';
 import 'package:habit_iq/features/habit/data/repositories/habit_repository_impl.dart';
 import 'package:habit_iq/features/habit/presentation/manager/habits_cubit.dart';
+import 'package:habit_iq/features/mood/presentation/manager/ai_cubit.dart';
 import 'package:habit_iq/features/profile/presentation/manager/user_cubit.dart';
 import 'package:habit_iq/features/splash/presentation/pages/splash_view.dart';
 
@@ -48,6 +49,7 @@ class HabitIq extends StatelessWidget {
         BlocProvider<AnalyticsCubit>(
           create: (_) => AnalyticsCubit(HabitRepositoryImpl())..loadAnalytics(),
         ),
+        BlocProvider<AICubit>(create: (_) => AICubit()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
