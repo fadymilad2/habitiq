@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../presentation/manager/habits_cubit.dart';
 import '../widgets/duration_section.dart';
 import '../widgets/frequency_selector.dart';
 import '../widgets/habit_name_field.dart';
@@ -21,6 +23,10 @@ class NewHabitView extends StatefulWidget {
 class _NewHabitViewState extends State<NewHabitView> {
   final _nameController = TextEditingController();
 
+  // Selected visual identity — kept in sync via VisualIdentitySection callbacks.
+  IconData _selectedIcon = Icons.menu_book_rounded; // matches index 0 default
+  Color _selectedColor = const Color(0xFF590DF2); // matches index 0 default
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -28,7 +34,25 @@ class _NewHabitViewState extends State<NewHabitView> {
   }
 
   void _onCancel() => Navigator.of(context).pop();
-  void _onSave() {} // TODO: validate & persist the new habit
+
+  void _onSave() {
+    final title = _nameController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a habit name.')),
+      );
+      return;
+    }
+
+    // Persist via HabitsCubit — this saves to Hive and reloads the home list.
+    context.read<HabitsCubit>().addNewHabit(
+      title,
+      _selectedIcon,
+      _selectedColor,
+    );
+
+    Navigator.of(context).pop(); // close the modal
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +95,12 @@ class _NewHabitViewState extends State<NewHabitView> {
               HabitNameField(controller: _nameController),
               const SizedBox(height: 28),
 
-              // ── 3. Visual identity ────────────────────────────────────────
-              const VisualIdentitySection(),
+              // ── 3. Visual identity (icon + colour) ────────────────────────
+              VisualIdentitySection(
+                onIconChanged: (icon) => setState(() => _selectedIcon = icon),
+                onColorChanged: (color) =>
+                    setState(() => _selectedColor = color),
+              ),
               const SizedBox(height: 28),
 
               // ── 4. Frequency ──────────────────────────────────────────────

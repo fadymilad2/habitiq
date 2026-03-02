@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_background.dart';
 import 'package:habit_iq/features/dashboard/presentation/pages/main_dashboard_view.dart';
+import 'package:habit_iq/features/profile/presentation/manager/user_cubit.dart';
+import 'package:habit_iq/features/profile/presentation/manager/user_state.dart';
 import '../widgets/auth_form_card.dart';
 import '../widgets/auth_guest_option.dart';
 import '../widgets/auth_header.dart';
@@ -24,7 +27,6 @@ class _AuthViewState extends State<AuthView>
     with SingleTickerProviderStateMixin {
   // ── Mode ──────────────────────────────────────────────────────────────────
   bool _isLogin = true;
-  bool _isLoading = false;
 
   // ── Form keys & controllers ───────────────────────────────────────────────
   final _formKey = GlobalKey<FormState>();
@@ -70,29 +72,12 @@ class _AuthViewState extends State<AuthView>
     });
   }
 
-  /// Validates the form then runs the auth action.
-  /// Replace the [Future.delayed] stub with a real BLoC / use-case call.
+  /// Validates the form then delegates to [UserCubit.loginDummyUser].
+  /// Navigation is handled reactively by the [BlocListener] in [build].
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _isLoading = true);
-
-    // ── Placeholder: simulate a 2-second network call ─────────────────────
-    await Future.delayed(const Duration(seconds: 2));
-    // TODO: replace ↑ with: await context.read<AuthCubit>().login(email, pass);
-
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-
-    // ── Navigate to Home, removing the entire auth back-stack ─────────────
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const MainDashboardView(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            FadeTransition(opacity: animation, child: child),
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
+    // Delegate auth to UserCubit — BlocListener will navigate on success.
+    await context.read<UserCubit>().loginDummyUser();
   }
 
   void _onGoogleSignIn() {
@@ -104,58 +89,65 @@ class _AuthViewState extends State<AuthView>
   }
 
   void _onGuestTap() {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const MainDashboardView(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            FadeTransition(opacity: animation, child: child),
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
+    // Guest mode: create a dummy session, then BlocListener navigates.
+    context.read<UserCubit>().loginDummyUser();
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: AppBackground(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
+    return BlocListener<UserCubit, UserState>(
+      // Navigate to the dashboard the moment the user is authenticated.
+      listenWhen: (_, next) => next is UserAuthenticated,
+      listener: (context, _) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, a, b) => const MainDashboardView(),
+            transitionsBuilder: (_, animation, b, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 500),
+          ),
+        );
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: AppBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
 
-                // ── Header: logo + title + tagline ────────────────────────
-                const AuthHeader(),
+                  // ── Header: logo + title + tagline ────────────────────────
+                  const AuthHeader(),
 
-                const SizedBox(height: 36),
+                  const SizedBox(height: 36),
 
-                // ── Glassmorphism form card ────────────────────────────────
-                AuthFormCard(
-                  formKey: _formKey,
-                  isLogin: _isLogin,
-                  isLoading: _isLoading,
-                  fadeAnimation: _fadeAnim,
-                  nameController: _nameController,
-                  emailController: _emailController,
-                  passwordController: _passwordController,
-                  confirmController: _confirmController,
-                  onSubmit: _submit,
-                  onToggle: _toggleMode,
-                  onGoogleSignIn: _onGoogleSignIn,
-                  onForgotPassword: _onForgotPassword,
-                ),
+                  // ── Glassmorphism form card ────────────────────────────────
+                  AuthFormCard(
+                    formKey: _formKey,
+                    isLogin: _isLogin,
+                    isLoading: false,
+                    fadeAnimation: _fadeAnim,
+                    nameController: _nameController,
+                    emailController: _emailController,
+                    passwordController: _passwordController,
+                    confirmController: _confirmController,
+                    onSubmit: _submit,
+                    onToggle: _toggleMode,
+                    onGoogleSignIn: _onGoogleSignIn,
+                    onForgotPassword: _onForgotPassword,
+                  ),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // ── Guest option ──────────────────────────────────────────
-                AuthGuestOption(onTap: _onGuestTap),
-              ],
+                  // ── Guest option ──────────────────────────────────────────
+                  AuthGuestOption(onTap: _onGuestTap),
+                ],
+              ),
             ),
           ),
         ),

@@ -6,8 +6,10 @@ import '../../../../core/widgets/app_background.dart';
 import '../widgets/splash_logo.dart';
 import '../widgets/splash_title.dart';
 import '../widgets/splash_loading_bar.dart';
+import '../../../dashboard/presentation/pages/main_dashboard_view.dart';
 import '../../../onboarding/presentation/pages/onboarding_view.dart';
 import '../../../auth/presentation/pages/auth_view.dart';
+import '../../../profile/presentation/manager/user_cubit.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -47,7 +49,9 @@ class _SplashViewState extends State<SplashView>
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => SplashCubit(),
+      // Pass the UserCubit (already provided at root) into SplashCubit
+      // so it can read auth state after the animation delay.
+      create: (context) => SplashCubit(context.read<UserCubit>()),
       child: BlocListener<SplashCubit, SplashState>(
         listener: (context, state) {
           if (state is SplashNavigateToOnboarding) {
@@ -69,7 +73,14 @@ class _SplashViewState extends State<SplashView>
               ),
             );
           } else if (state is SplashNavigateToHome) {
-            // Navigator.pushReplacementNamed(context, '/home');
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (_, a, b) => const MainDashboardView(),
+                transitionsBuilder: (_, animation, b, child) =>
+                    FadeTransition(opacity: animation, child: child),
+                transitionDuration: const Duration(milliseconds: 600),
+              ),
+            );
           }
         },
         child: Scaffold(

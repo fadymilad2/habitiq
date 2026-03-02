@@ -12,14 +12,12 @@ class _PrefTile {
     required this.iconBg,
     required this.title,
     required this.subtitle,
-    this.trailingLabel,
     this.isSwitch = false,
   });
   final IconData icon;
   final Color iconBg;
   final String title;
   final String subtitle;
-  final String? trailingLabel;
   final bool isSwitch;
 }
 
@@ -172,26 +170,14 @@ class _PreferenceTileState extends State<_PreferenceTile> {
                   Switch(
                     value: _switchValue,
                     onChanged: (val) => setState(() => _switchValue = val),
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                   )
-                else ...[
-                  if (widget.tile.trailingLabel != null) ...[
-                    Text(
-                      widget.tile.trailingLabel!,
-                      style: GoogleFonts.spaceGrotesk(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                  ],
+                else
                   const Icon(
                     Icons.chevron_right_rounded,
                     color: AppColors.textSecondary,
                     size: 20,
                   ),
-                ],
               ],
             ),
           ),

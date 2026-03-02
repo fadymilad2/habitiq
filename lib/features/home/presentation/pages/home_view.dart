@@ -1,42 +1,20 @@
 import 'package:flutter/material.dart';
-import '../../domain/models/habit_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../habit/presentation/manager/habits_cubit.dart';
+import '../../../habit/presentation/manager/habits_state.dart';
+import '../../../profile/presentation/manager/user_cubit.dart';
+import '../../../profile/presentation/manager/user_state.dart';
 import '../widgets/daily_progress_ring.dart';
 import '../widgets/habit_card.dart';
 import '../widgets/habits_section_header.dart';
 import '../widgets/home_header.dart';
 
 /// The Home Tab content.
-/// Now just responsible for displaying the user's habits and daily progress
-/// from within the MainDashboardView.
-class HomeView extends StatefulWidget {
+/// Fully driven by [HabitsCubit] (habits list + progress) and
+/// [UserCubit] (user name + level). Zero local state.
+class HomeView extends StatelessWidget {
   const HomeView({super.key});
-
-  @override
-  State<HomeView> createState() => _HomeViewState();
-}
-
-class _HomeViewState extends State<HomeView> {
-  // ── State ─────────────────────────────────────────────────────────────────
-  List<HabitModel> _habits = HabitModel.samples;
-
-  // ── Callbacks ─────────────────────────────────────────────────────────────
-
-  void _toggleHabit(String id) {
-    setState(() {
-      _habits = _habits.map((h) {
-        return h.id == id ? h.copyWith(isCompleted: !h.isCompleted) : h;
-      }).toList();
-    });
-  }
-
-  /// Ratio of completed habits (0.0 – 1.0).
-  double get _dailyProgress {
-    if (_habits.isEmpty) return 0;
-    return _habits.where((h) => h.isCompleted).length / _habits.length;
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
-
+  
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
@@ -45,28 +23,54 @@ class _HomeViewState extends State<HomeView> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(
-          child: SizedBox(height: topPadding + 20),
-        ),
+        SliverToBoxAdapter(child: SizedBox(height: topPadding + 20)),
+
+        // ── Header: live name + level from UserCubit ──────────────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: HomeHeader(
-              userName: 'Alex',
-              level: 12,
-              levelProgress: 0.45,
-              streakCount: 14,
+            child: BlocBuilder<UserCubit, UserState>(
+              builder: (context, state) {
+                final name = state is UserAuthenticated
+                    ? state.user.name
+                    : 'guest';
+                final level = state is UserAuthenticated ? state.user.level : 1;
+                final levelProgress = state is UserAuthenticated
+                    ? state.user.levelProgress
+                    : 0.0;
+                final streakCount = state is UserAuthenticated
+                    ? state.user.streakCount
+                    : 0;
+                return HomeHeader(
+                  userName: name,
+                  level: level,
+                  levelProgress: levelProgress,
+                  streakCount: streakCount,
+                );
+              },
             ),
           ),
         ),
+
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
+        // ── Daily progress ring: driven by HabitsCubit ────────────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: DailyProgressRing(percent: _dailyProgress),
+            child: BlocBuilder<HabitsCubit, HabitsState>(
+              builder: (context, state) {
+                final progress = state is HabitsLoaded
+                    ? state.dailyProgress
+                    : 0.0;
+                return DailyProgressRing(percent: progress);
+              },
+            ),
           ),
         ),
+
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -77,23 +81,42 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
         ),
+
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            0,
-            20,
-            bottomPadding + 140, // Ensure enough space for the floating nav bar and FAB
-          ),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) => HabitCard(
-                habit: _habits[index],
-                onToggle: () => _toggleHabit(_habits[index].id),
+
+        // ── Habits list: driven by HabitsCubit ────────────────────────────
+        BlocBuilder<HabitsCubit, HabitsState>(
+          builder: (context, state) {
+            // Show an empty sliver while loading / on error.
+            if (state is! HabitsLoaded) {
+              return SliverToBoxAdapter(
+                child: state is HabitsLoading
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              );
+            }
+
+            return SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPadding + 140),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final habit = state.habits[index];
+                  return HabitCard(
+                    habit: habit,
+                    // Toggle wired to HabitsCubit — persists to Hive.
+                    onToggle: () => context
+                        .read<HabitsCubit>()
+                        .toggleHabitCompletion(habit.id),
+                  );
+                }, childCount: state.habits.length),
               ),
-              childCount: _habits.length,
-            ),
-          ),
+            );
+          },
         ),
       ],
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
+import 'package:habit_iq/core/theme/theme_cubit.dart';
 
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({super.key});
@@ -23,7 +25,7 @@ class ProfileHeader extends StatelessWidget {
         children: [
           // Theme Toggle button
           GestureDetector(
-            onTap: () => _showSnackBar(context, 'Theme Toggled 🌗'),
+            onTap: () => context.read<ThemeCubit>().toggleTheme(),
             child: Container(
               width: 40,
               height: 40,

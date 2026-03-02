@@ -5,8 +5,19 @@ import '../../../../core/theme/app_colors.dart';
 /// Selectable icon grid + color circle row for the habit's visual identity.
 ///
 /// Manages its own [_selectedIconIndex] and [_selectedColorIndex] state.
+/// Reports changes to the parent via [onIconChanged] and [onColorChanged].
 class VisualIdentitySection extends StatefulWidget {
-  const VisualIdentitySection({super.key});
+  const VisualIdentitySection({
+    super.key,
+    this.onIconChanged,
+    this.onColorChanged,
+  });
+
+  /// Called whenever the user selects a different icon.
+  final ValueChanged<IconData>? onIconChanged;
+
+  /// Called whenever the user selects a different colour.
+  final ValueChanged<Color>? onColorChanged;
 
   @override
   State<VisualIdentitySection> createState() => _VisualIdentitySectionState();
@@ -69,7 +80,10 @@ class _VisualIdentitySectionState extends State<VisualIdentitySection> {
             itemBuilder: (_, i) {
               final selected = i == _selectedIconIndex;
               return GestureDetector(
-                onTap: () => setState(() => _selectedIconIndex = i),
+                onTap: () {
+                  setState(() => _selectedIconIndex = i);
+                  widget.onIconChanged?.call(_icons[i]);
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
@@ -106,7 +120,10 @@ class _VisualIdentitySectionState extends State<VisualIdentitySection> {
               final color = entry.value;
               final selected = i == _selectedColorIndex;
               return GestureDetector(
-                onTap: () => setState(() => _selectedColorIndex = i),
+                onTap: () {
+                  setState(() => _selectedColorIndex = i);
+                  widget.onColorChanged?.call(color);
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.only(right: 10),

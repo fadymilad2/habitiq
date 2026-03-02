@@ -38,40 +38,4 @@ class HabitModel {
       isAIPick: isAIPick ?? this.isAIPick,
     );
   }
-
-  // ── Sample data ────────────────────────────────────────────────────────────
-  static List<HabitModel> get samples => const [
-    HabitModel(
-      id: '1',
-      title: 'Morning Meditation',
-      subtitle: '15 minutes completed',
-      icon: Icons.self_improvement_rounded,
-      isCompleted: true,
-    ),
-    HabitModel(
-      id: '2',
-      title: 'Deep Work Session',
-      subtitle: 'Recommended: 09:00 AM',
-      icon: Icons.work_outline_rounded,
-      isAIPick: true,
-    ),
-    HabitModel(
-      id: '3',
-      title: 'HIIT Workout',
-      subtitle: '30 mins cardio',
-      icon: Icons.fitness_center_rounded,
-    ),
-    HabitModel(
-      id: '4',
-      title: 'Read 10 Pages',
-      subtitle: '0 / 10 pages',
-      icon: Icons.menu_book_rounded,
-    ),
-    HabitModel(
-      id: '5',
-      title: 'Hydration',
-      subtitle: '2.5L / 3L',
-      icon: Icons.water_drop_outlined,
-    ),
-  ];
 }
