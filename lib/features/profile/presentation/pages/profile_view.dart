@@ -5,6 +5,7 @@ import 'package:habit_iq/features/profile/presentation/widgets/profile_footer.da
 import 'package:habit_iq/features/profile/presentation/widgets/profile_header.dart';
 import 'package:habit_iq/features/profile/presentation/widgets/profile_stats_row.dart';
 import 'package:habit_iq/features/profile/presentation/widgets/user_avatar_section.dart';
+
 /// ProfileView — Tab 4 of the main dashboard.
 /// No Scaffold; intended as a child of an [IndexedStack].
 class ProfileView extends StatelessWidget {
@@ -45,4 +46,3 @@ class ProfileView extends StatelessWidget {
     );
   }
 }
-

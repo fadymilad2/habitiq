@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_background.dart';
+import '../../../analytics/presentation/manager/analytics_cubit.dart';
 import '../../../analytics/presentation/pages/analytics_view.dart';
 import '../../../home/presentation/pages/home_view.dart';
 import '../../../mood/presentation/pages/ai_mood_view.dart';
@@ -81,8 +82,16 @@ class MainDashboardView extends StatelessWidget {
                     bottom: 0,
                     child: CustomFloatingNavBar(
                       currentIndex: currentIndex,
-                      onTap: (index) =>
-                          context.read<DashboardCubit>().changeTab(index),
+                      onTap: (index) {
+                        // Switch the active tab.
+                        context.read<DashboardCubit>().changeTab(index);
+                        // When the user navigates to the Analytics or Profile tab,
+                        // immediately refresh analytics so the chart and stats reflect
+                        // any habit completions done since the last visit.
+                        if (index == 1 || index == 3) {
+                          context.read<AnalyticsCubit>().loadAnalytics();
+                        }
+                      },
                       onFabTap: () => _onAddHabit(context),
                     ),
                   ),

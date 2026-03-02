@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../analytics/presentation/manager/analytics_cubit.dart';
 import '../../../habit/presentation/manager/habits_cubit.dart';
 import '../../../habit/presentation/manager/habits_state.dart';
 import '../../../profile/presentation/manager/user_cubit.dart';
@@ -14,7 +15,7 @@ import '../widgets/home_header.dart';
 /// [UserCubit] (user name + level). Zero local state.
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
@@ -109,9 +110,14 @@ class HomeView extends StatelessWidget {
                   return HabitCard(
                     habit: habit,
                     // Toggle wired to HabitsCubit — persists to Hive.
-                    onToggle: () => context
-                        .read<HabitsCubit>()
-                        .toggleHabitCompletion(habit.id),
+                    // Also triggers an immediate analytics refresh so the
+                    // Analytics tab is always up-to-date in the background.
+                    onToggle: () {
+                      context.read<HabitsCubit>().toggleHabitCompletion(
+                        habit.id,
+                      );
+                      context.read<AnalyticsCubit>().loadAnalytics();
+                    },
                   );
                 }, childCount: state.habits.length),
               ),

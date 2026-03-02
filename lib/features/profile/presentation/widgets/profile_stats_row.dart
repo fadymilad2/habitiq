@@ -1,23 +1,41 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
+import 'package:habit_iq/features/analytics/presentation/manager/analytics_cubit.dart';
+import 'package:habit_iq/features/analytics/presentation/manager/analytics_state.dart';
 
 class ProfileStatsRow extends StatelessWidget {
   const ProfileStatsRow({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          _StatCard(value: '86%', label: 'Consistency'),
-          const SizedBox(width: 10),
-          _StatCard(value: '42', label: 'Streak'),
-          const SizedBox(width: 10),
-          _StatCard(value: '124', label: 'Total Days'),
-        ],
-      ),
+    return BlocBuilder<AnalyticsCubit, AnalyticsState>(
+      builder: (context, state) {
+        String consistencyStr = '0%';
+        String streakStr = '0';
+        String totalDaysStr = '0';
+
+        if (state is AnalyticsLoaded) {
+          consistencyStr = '${(state.allTimeAverage * 100).toInt()}%';
+          streakStr = state.currentStreak.toString();
+          totalDaysStr = state.totalActiveDays.toString();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              _StatCard(value: consistencyStr, label: 'Consistency'),
+              const SizedBox(width: 10),
+              _StatCard(value: streakStr, label: 'Streak'),
+              const SizedBox(width: 10),
+              _StatCard(value: totalDaysStr, label: 'Total Days'),
+            ],
+          ),
+        );
+      },
     );
   }
 }

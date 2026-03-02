@@ -4,7 +4,17 @@ import 'package:habit_iq/core/theme/app_text_styles.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class StreakCards extends StatelessWidget {
-  const StreakCards({super.key});
+  const StreakCards({
+    super.key,
+    required this.currentStreak,
+    required this.bestStreak,
+  });
+
+  /// Consecutive days (today/yesterday + backwards) where ≥1 habit was done.
+  final int currentStreak;
+
+  /// Longest streak ever recorded across any single habit.
+  final int bestStreak;
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +26,7 @@ class StreakCards extends StatelessWidget {
             child: _StreakCard(
               icon: '🔥',
               iconBgColor: const Color(0xFFFF6B2B).withValues(alpha: 0.15),
-              value: '12',
+              value: currentStreak.toString(),
               label: 'Current Streak',
               glowColor: const Color(0xFFFF6B2B),
             ),
@@ -26,7 +36,7 @@ class StreakCards extends StatelessWidget {
             child: _StreakCard(
               icon: '🏆',
               iconBgColor: const Color(0xFFFFBF24).withValues(alpha: 0.15),
-              value: '45',
+              value: bestStreak.toString(),
               label: 'Best Streak',
               glowColor: const Color(0xFFFFBF24),
             ),

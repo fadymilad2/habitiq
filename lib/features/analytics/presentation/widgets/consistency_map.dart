@@ -1,42 +1,37 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
 import 'package:habit_iq/core/theme/app_text_styles.dart';
 
 // ---------------------------------------------------------------------------
-// Dummy heatmap data — 7 rows × 13 columns (≈ 13 weeks)
-// Using values 0–4 to represent intensity buckets, similar to GitHub style.
-// ---------------------------------------------------------------------------
-final _random = Random(42);
-
-// Generate a realistic-looking pattern seeded so it's deterministic
-List<List<int>> _generateData() {
-  return List.generate(7, (row) {
-    return List.generate(13, (col) {
-      // Recent weeks (right side) → higher values
-      final recency = col / 12.0; // 0 = oldest, 1 = newest
-      final rand = _random.nextDouble();
-      if (rand < 0.08) return 0;
-      if (rand < 0.22 + recency * 0.1) return 1;
-      if (rand < 0.55 + recency * 0.2) return 2;
-      if (rand < 0.78 + recency * 0.1) return 3;
-      return 4;
-    });
-  });
-}
-
-final _heatmapData = _generateData();
-
-// ---------------------------------------------------------------------------
-// Intensity → valwithValues mapping
+// Intensity → opacity mapping (matches original ConsistencyMap visual design)
 // ---------------------------------------------------------------------------
 const _opacities = [0.06, 0.25, 0.45, 0.68, 1.0];
+
+/// Maps a completion percentage (0–100) to an intensity bucket (0–4).
+///
+/// Bucket thresholds:
+///  0 = 0%         (no completions that day)
+///  1 = 1–24%
+///  2 = 25–49%
+///  3 = 50–74%
+///  4 = 75–100%
+int _percentToIntensity(int percent) {
+  if (percent == 0) return 0;
+  if (percent < 25) return 1;
+  if (percent < 50) return 2;
+  if (percent < 75) return 3;
+  return 4;
+}
 
 // ---------------------------------------------------------------------------
 // Widget
 // ---------------------------------------------------------------------------
 class ConsistencyMap extends StatelessWidget {
-  const ConsistencyMap({super.key});
+  const ConsistencyMap({super.key, required this.heatMapData});
+
+  /// date (time-zeroed) → completion percentage 0–100 for the past 91 days.
+  /// Expected to contain exactly 91 entries (7 rows × 13 columns).
+  final Map<DateTime, int> heatMapData;
 
   @override
   Widget build(BuildContext context) {
@@ -96,13 +91,28 @@ class ConsistencyMap extends StatelessWidget {
                 final cellSize =
                     (constraints.maxWidth - spacing * (cols - 1)) / cols;
 
+                // Sort the map entries by date (oldest first) so the grid
+                // fills left-to-right, oldest column on the left.
+                final sortedEntries = heatMapData.entries.toList()
+                  ..sort((a, b) => a.key.compareTo(b.key));
+                // Reshape flat list into 7 rows × 13 cols (row-major, Mon–Sun).
+                // Each column = one week; each row = one weekday.
+                // We fill column by column (91 entries / 7 rows = 13 cols).
+                final grid = List.generate(rows, (row) {
+                  return List.generate(cols, (col) {
+                    final idx = col * rows + row;
+                    if (idx >= sortedEntries.length) return 0;
+                    return _percentToIntensity(sortedEntries[idx].value);
+                  });
+                });
+
                 return Column(
                   children: List.generate(rows, (rowIdx) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Row(
                         children: List.generate(cols, (colIdx) {
-                          final intensity = _heatmapData[rowIdx][colIdx];
+                          final intensity = grid[rowIdx][colIdx];
                           return Padding(
                             padding: EdgeInsets.only(
                               right: colIdx < cols - 1 ? spacing : 0,
@@ -147,7 +157,9 @@ class _HeatCell extends StatelessWidget {
         boxShadow: intensity >= 3
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3 * vvalwithValues),
+                  color: AppColors.primary.withValues(
+                    alpha: 0.3 * vvalwithValues,
+                  ),
                   blurRadius: 6,
                   spreadRadius: 0,
                 ),

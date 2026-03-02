@@ -4,7 +4,10 @@ import 'package:habit_iq/core/theme/app_colors.dart';
 import 'package:habit_iq/core/theme/app_text_styles.dart';
 
 class TotalHabitsCard extends StatelessWidget {
-  const TotalHabitsCard({super.key});
+  const TotalHabitsCard({super.key, required this.totalCompletions});
+
+  /// All-time sum of completions across every habit.
+  final int totalCompletions;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +75,7 @@ class TotalHabitsCard extends StatelessWidget {
               ),
             ),
             Text(
-              '1,248',
+              _formatNumber(totalCompletions),
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
@@ -83,5 +86,16 @@ class TotalHabitsCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Formats [n] with thousands separators, e.g. 1248 → "1,248".
+  static String _formatNumber(int n) {
+    final s = n.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buffer.write(',');
+      buffer.write(s[i]);
+    }
+    return buffer.toString();
   }
 }

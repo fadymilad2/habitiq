@@ -4,6 +4,7 @@ import 'package:habit_iq/core/data/services/hive_service.dart';
 import 'package:habit_iq/core/theme/app_theme.dart';
 import 'package:habit_iq/core/theme/theme_cubit.dart';
 import 'package:habit_iq/features/auth/data/repositories/user_repository_impl.dart';
+import 'package:habit_iq/features/analytics/presentation/manager/analytics_cubit.dart';
 import 'package:habit_iq/features/dashboard/presentation/manager/dashboard_cubit.dart';
 import 'package:habit_iq/features/habit/data/repositories/habit_repository_impl.dart';
 import 'package:habit_iq/features/habit/presentation/manager/habits_cubit.dart';
@@ -43,6 +44,9 @@ class HabitIq extends StatelessWidget {
         ),
         BlocProvider<HabitsCubit>(
           create: (_) => HabitsCubit(HabitRepositoryImpl())..loadTodayHabits(),
+        ),
+        BlocProvider<AnalyticsCubit>(
+          create: (_) => AnalyticsCubit(HabitRepositoryImpl())..loadAnalytics(),
         ),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(

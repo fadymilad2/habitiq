@@ -4,66 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
 import 'package:habit_iq/core/theme/app_text_styles.dart';
+import 'package:habit_iq/features/analytics/presentation/manager/analytics_state.dart';
 
-// ---------------------------------------------------------------------------
-// Dummy data per period
-// ---------------------------------------------------------------------------
-const _weeklyData = [
-  FlSpot(0, 62),
-  FlSpot(1, 55),
-  FlSpot(2, 92),
-  FlSpot(3, 70),
-  FlSpot(4, 80),
-  FlSpot(5, 95),
-  FlSpot(6, 85),
-];
-
-const _monthlyData = [
-  FlSpot(0, 50),
-  FlSpot(1, 58),
-  FlSpot(2, 72),
-  FlSpot(3, 65),
-  FlSpot(4, 77),
-  FlSpot(5, 80),
-  FlSpot(6, 68),
-  FlSpot(7, 75),
-  FlSpot(8, 85),
-  FlSpot(9, 90),
-  FlSpot(10, 82),
-  FlSpot(11, 88),
-];
-
-const _allData = [
-  FlSpot(0, 40),
-  FlSpot(1, 52),
-  FlSpot(2, 60),
-  FlSpot(3, 55),
-  FlSpot(4, 68),
-  FlSpot(5, 72),
-  FlSpot(6, 78),
-  FlSpot(7, 65),
-  FlSpot(8, 80),
-  FlSpot(9, 85),
-  FlSpot(10, 88),
-  FlSpot(11, 92),
-];
-
-const _labels7d = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const _labels30d = [
-  'W1',
-  'W2',
-  'W3',
-  'W4',
-  'W5',
-  'W6',
-  'W7',
-  'W8',
-  'W9',
-  'W10',
-  'W11',
-  'W12',
-];
-const _labelsAll = [
+/// Monthly short-hand labels used to annotate the ALL-time axis.
+const _monthAbbr = [
   'Jan',
   'Feb',
   'Mar',
@@ -78,16 +22,40 @@ const _labelsAll = [
   'Dec',
 ];
 
-// Glowing "peak" dot index (highest value) per period
-const _peakIndexByPeriod = [5, 10, 11]; // sat for 7D, oct for 30D, dec for ALL
-
 enum _Period { d7, d30, all }
 
 // ---------------------------------------------------------------------------
 // Widget
 // ---------------------------------------------------------------------------
+
+/// A line-chart card that switches between the 7D, 30D, and ALL-time views.
+///
+/// All data is passed in via constructor parameters; no BlocBuilder here.
+/// The parent (`AnalyticsView`) is responsible for reading state and
+/// constructing this widget.
 class WeeklyCompletionChart extends StatefulWidget {
-  const WeeklyCompletionChart({super.key});
+  const WeeklyCompletionChart({
+    super.key,
+    required this.weeklyData,
+    required this.monthlyData,
+    required this.allTimeData,
+    required this.weeklyAverage,
+    required this.monthlyAverage,
+    required this.allTimeAverage,
+  });
+
+  /// Day-stamped values for recent 7 days
+  final List<DayEntry> weeklyData;
+
+  /// Day-stamped values for recent 30 days
+  final List<DayEntry> monthlyData;
+
+  /// Monthly aggregates
+  final List<MonthEntry> allTimeData;
+
+  final double weeklyAverage;
+  final double monthlyAverage;
+  final double allTimeAverage;
 
   @override
   State<WeeklyCompletionChart> createState() => _WeeklyCompletionChartState();
@@ -117,31 +85,88 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
     super.dispose();
   }
 
-  List<FlSpot> get _data => switch (_selected) {
-    _Period.d7 => _weeklyData,
-    _Period.d30 => _monthlyData,
-    _Period.all => _allData,
+  // ── Data helpers ───────────────────────────────────────────────────────────
+
+  List<FlSpot> _toDaySpots(List<DayEntry> entries) {
+    return List.generate(
+      entries.length,
+      (i) => FlSpot(i.toDouble(), (entries[i].value * 100).clamp(0, 100)),
+    );
+  }
+
+  List<FlSpot> _toMonthSpots(List<MonthEntry> entries) {
+    return List.generate(
+      entries.length,
+      (i) => FlSpot(i.toDouble(), (entries[i].value * 100).clamp(0, 100)),
+    );
+  }
+
+  /// Returns the `FlSpot` list for the currently selected period.
+  List<FlSpot> get _spots {
+    return switch (_selected) {
+      _Period.d7 => _toDaySpots(widget.weeklyData),
+      _Period.d30 => _toDaySpots(widget.monthlyData),
+      _Period.all => _toMonthSpots(widget.allTimeData),
+    };
+  }
+
+  /// Returns index of the spot with the highest y value (for the glow dot).
+  int get _peakIndex {
+    final spots = _spots;
+    if (spots.isEmpty) return 0;
+    int best = 0;
+    for (int i = 1; i < spots.length; i++) {
+      if (spots[i].y > spots[best].y) best = i;
+    }
+    return best;
+  }
+
+  // ── Label helpers ──────────────────────────────────────────────────────────
+
+  /// Returns the x-axis label for a given index in the active period.
+  String _labelAt(int index) {
+    switch (_selected) {
+      case _Period.d7:
+        final entries = widget.weeklyData;
+        if (index < 0 || index >= entries.length) return '';
+        final day = entries[index].date;
+        const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        return weekdays[day.weekday - 1];
+
+      case _Period.d30:
+        if (index % 5 != 0) return '';
+        final entries = widget.monthlyData;
+        if (index < 0 || index >= entries.length) return '';
+        final day = entries[index].date;
+        return '${day.day}/${day.month}';
+
+      case _Period.all:
+        final entries = widget.allTimeData;
+        if (index < 0 || index >= entries.length) return '';
+        final targetMonth = entries[index].month;
+        if (entries.length > 6 && index % 2 != 0) return '';
+        return _monthAbbr[(targetMonth - 1) % 12];
+    }
+  }
+
+  // ── Summary label (big number in the header) ───────────────────────────────
+
+  String get _averageLabel {
+    final double avg = switch (_selected) {
+      _Period.d7 => widget.weeklyAverage,
+      _Period.d30 => widget.monthlyAverage,
+      _Period.all => widget.allTimeAverage,
+    };
+    return '${(avg * 100).round()}%';
+  }
+
+  String get _changeLabelPlaceholder => switch (_selected) {
+    _Period.d7 => '7D avg',
+    _Period.d30 => '30D avg',
+    _Period.all => 'All time',
   };
 
-  List<String> get _bottomLabels => switch (_selected) {
-    _Period.d7 => _labels7d,
-    _Period.d30 => _labels30d,
-    _Period.all => _labelsAll,
-  };
-
-  int get _peakIndex => _peakIndexByPeriod[_selected.index];
-
-  String get _percentLabel => switch (_selected) {
-    _Period.d7 => '85%',
-    _Period.d30 => '78%',
-    _Period.all => '72%',
-  };
-
-  String get _changeLabel => switch (_selected) {
-    _Period.d7 => '+12%',
-    _Period.d30 => '+8%',
-    _Period.all => '+25%',
-  };
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -180,14 +205,14 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Weekly Completion',
+                              'Completion Rate',
                               style: AppTextStyles.bodyMedium,
                             ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
                                 Text(
-                                  _percentLabel,
+                                  _averageLabel,
                                   style: GoogleFonts.spaceGrotesk(
                                     fontSize: 36,
                                     fontWeight: FontWeight.w800,
@@ -202,28 +227,18 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.success.withValues(
-                                      alpha: 0.15,
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.12,
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.trending_up,
-                                        color: AppColors.success,
-                                        size: 13,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        _changeLabel,
-                                        style: GoogleFonts.spaceGrotesk(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.success,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    _changeLabelPlaceholder,
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primary,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -231,7 +246,7 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
                           ],
                         ),
                       ),
-                      // Segment toggle
+                      // ── Segment toggle ───────────────────────────────
                       _SegmentToggle(
                         selected: _selected,
                         onChanged: (p) => setState(() => _selected = p),
@@ -246,7 +261,7 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
                       animation: _glowAnim,
                       builder: (_, _) => LineChart(
                         _buildChart(),
-                        duration: const Duration(milliseconds: 500),
+                        duration: const Duration(milliseconds: 400),
                       ),
                     ),
                   ),
@@ -260,9 +275,34 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
   }
 
   LineChartData _buildChart() {
-    final spots = _data;
-    final peak = spots[_peakIndex];
-    final labels = _bottomLabels;
+    final spots = _spots;
+    if (spots.isEmpty) {
+      // Edge-case: no data yet — show a flat zero line.
+      return LineChartData(
+        gridData: FlGridData(show: false),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(spots: [FlSpot(0, 0), FlSpot(1, 0)]),
+        ],
+      );
+    }
+
+    final peakIdx = _peakIndex;
+    final peakSpot = spots[peakIdx];
 
     return LineChartData(
       gridData: FlGridData(show: false),
@@ -280,15 +320,13 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
             interval: 1,
             getTitlesWidget: (value, meta) {
               final idx = value.toInt();
-              if (idx < 0 || idx >= labels.length) return const SizedBox();
-              // Show every other label for 30D / ALL to avoid clutter
-              if (_selected != _Period.d7 && idx % 2 != 0) {
-                return const SizedBox();
-              }
+              if (idx < 0 || idx >= spots.length) return const SizedBox();
+              final label = _labelAt(idx);
+              if (label.isEmpty) return const SizedBox();
               return Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  labels[idx],
+                  label,
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 10,
                     color: AppColors.textSecondary,
@@ -299,7 +337,7 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
           ),
         ),
       ),
-      minY: 30,
+      minY: 0,
       maxY: 105,
       lineBarsData: [
         LineChartBarData(
@@ -311,7 +349,8 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
           isStrokeCapRound: true,
           dotData: FlDotData(
             show: true,
-            checkToShowDot: (spot, _) => spot.x == peak.x && spot.y == peak.y,
+            checkToShowDot: (spot, _) =>
+                spot.x == peakSpot.x && spot.y == peakSpot.y,
             getDotPainter: (spot, percent, bar, index) =>
                 _GlowDotPainter(glowOpacity: _glowAnim.value),
           ),
@@ -332,7 +371,6 @@ class _WeeklyCompletionChartState extends State<WeeklyCompletionChart>
           ),
         ),
       ],
-      // Tooltip on peak
       lineTouchData: LineTouchData(
         enabled: true,
         touchTooltipData: LineTouchTooltipData(
