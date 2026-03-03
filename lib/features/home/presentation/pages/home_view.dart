@@ -5,6 +5,7 @@ import '../../../habit/presentation/manager/habits_cubit.dart';
 import '../../../habit/presentation/manager/habits_state.dart';
 import '../../../profile/presentation/manager/user_cubit.dart';
 import '../../../profile/presentation/manager/user_state.dart';
+import 'all_habits_view.dart';
 import '../widgets/daily_progress_ring.dart';
 import '../widgets/habit_card.dart';
 import '../widgets/habits_section_header.dart';
@@ -83,7 +84,10 @@ class HomeView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: HabitsSectionHeader(
               onViewAll: () {
-                // TODO: navigate to full habit list
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AllHabitsView()),
+                );
               },
             ),
           ),

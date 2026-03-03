@@ -19,8 +19,8 @@ class HabitModel extends HiveObject {
   String colorHex;
 
   /// Whether the habit has been tapped as done for today's session.
-  @HiveField(4)
-  bool isCompletedToday;
+  @HiveField(4, defaultValue: false)
+  bool isCompletedToday = false;
 
   /// Each [DateTime] in this list represents a day the habit was completed.
   /// Store only date components (time zeroed out) for easy comparison.
@@ -31,8 +31,20 @@ class HabitModel extends HiveObject {
   final DateTime createdAt;
 
   /// Frequency: 0 = Daily, 1 = Weekly, 2 = Custom.
-  @HiveField(7)
-  int frequency;
+  @HiveField(7, defaultValue: 0)
+  int frequency = 0;
+
+  /// The overarching goal in days (e.g., 66, 90, 365). Default is 66 representing a standard habit timeline.
+  @HiveField(8, defaultValue: 66)
+  int targetDays = 66;
+
+  /// Whether the user has enabled reminders for this habit.
+  @HiveField(9, defaultValue: false)
+  bool hasReminder = false;
+
+  /// The time of day for the reminder (the date part is ignored).
+  @HiveField(10)
+  DateTime? reminderTime;
 
   HabitModel({
     required this.id,
@@ -43,6 +55,9 @@ class HabitModel extends HiveObject {
     List<DateTime>? completionDates,
     required this.createdAt,
     this.frequency = 0,
+    this.targetDays = 66,
+    this.hasReminder = false,
+    this.reminderTime,
   }) : completionDates = completionDates ?? [];
 
   /// Marks today as completed and sets [isCompletedToday] to `true`.
@@ -80,6 +95,29 @@ class HabitModel extends HiveObject {
       }
     }
     return streak;
+  }
+
+  /// Helper getter for UI compatibility
+  bool get isCompleted => isCompletedToday;
+
+  /// Helper getter for UI compatibility
+  bool get isAIPick => false;
+
+  /// Builds a subtitle string that reflects the habit's frequency.
+  String get subtitle {
+    final total = totalCompletions;
+    final streak = currentStreak;
+
+    switch (frequency) {
+      case 1: // Weekly
+        return 'Weekly · $total total';
+      case 2: // Custom
+        return 'Custom schedule · $total total';
+      case 0: // Daily (default)
+      default:
+        if (streak == 0) return '$total total completions';
+        return '$streak day streak · $total total';
+    }
   }
 
   // ── helpers ────────────────────────────────────────────────────────────────

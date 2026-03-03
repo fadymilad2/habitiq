@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:habit_iq/core/widgets/glow_toggle.dart';
+import 'package:habit_iq/features/habit/presentation/pages/habit_details_view.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/models/habit_model.dart';
+import '../../../habit/data/models/habit_model.dart';
 
-/// A dark glassmorphism card representing a single habit in the list.
-///
-/// Parameters:
-/// - [habit]       — the [HabitModel] to render.
-/// - [onToggle]    — called when the user taps the completion toggle.
 class HabitCard extends StatelessWidget {
   const HabitCard({super.key, required this.habit, required this.onToggle});
 
@@ -41,60 +38,80 @@ class HabitCard extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           // ── Main content row ─────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                // Icon container
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: habit.isCompleted
-                        ? AppColors.primary.withValues(alpha: 0.2)
-                        : AppColors.surfaceHighlight,
-                    borderRadius: BorderRadius.circular(12),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HabitDetailsView(habit: habit),
                   ),
-                  child: Icon(
-                    habit.icon,
-                    color: habit.isCompleted
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
-                    size: 22,
-                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
                 ),
-                const SizedBox(width: 14),
+                child: Row(
+                  children: [
+                    // Icon container
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: habit.isCompleted
+                            ? AppColors.primary.withValues(alpha: 0.2)
+                            : AppColors.surfaceHighlight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        IconData(habit.icon, fontFamily: 'MaterialIcons'),
+                        color: habit.isCompleted
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
 
-                // Title + subtitle
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        habit.title,
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
+                    // Title + subtitle
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            habit.title,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            habit.subtitle,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 12,
+                              color: habit.isAIPick
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        habit.subtitle,
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 12,
-                          color: habit.isAIPick
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+
+                    // Toggle
+                    GlowToggle(
+                      value: habit.isCompleted,
+                      onChanged: (_) => onToggle(),
+                    ),
+                  ],
                 ),
-
-                // Toggle
-                _GlowToggle(isCompleted: habit.isCompleted, onTap: onToggle),
-              ],
+              ),
             ),
           ),
 
@@ -141,67 +158,6 @@ class HabitCard extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Private toggle widget ─────────────────────────────────────────────────────
-
-/// A custom animated on/off toggle with a neon glow when active.
-class _GlowToggle extends StatelessWidget {
-  const _GlowToggle({required this.isCompleted, required this.onTap});
-
-  final bool isCompleted;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeInOut,
-        width: 52,
-        height: 30,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          color: isCompleted ? AppColors.primary : AppColors.surfaceHighlight,
-          boxShadow: isCompleted
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.55),
-                    blurRadius: 12,
-                    spreadRadius: 0,
-                  ),
-                ]
-              : null,
-        ),
-        child: Stack(
-          children: [
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              left: isCompleted ? 24 : 2,
-              top: 3,
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: isCompleted
-                    ? const Icon(
-                        Icons.check_rounded,
-                        color: AppColors.primary,
-                        size: 14,
-                      )
-                    : null,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

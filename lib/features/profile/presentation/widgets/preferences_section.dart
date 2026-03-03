@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:habit_iq/core/widgets/glow_toggle.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -28,18 +29,6 @@ const _tiles = [
     title: 'Pause All Reminders',
     subtitle: 'Mute habits notifications',
     isSwitch: true,
-  ),
-  _PrefTile(
-    icon: Icons.lock_outline_rounded,
-    iconBg: Color(0xFF3B82F6),
-    title: 'Privacy & Security',
-    subtitle: 'Passcode & FaceID',
-  ),
-  _PrefTile(
-    icon: Icons.extension_outlined,
-    iconBg: Color(0xFF22C55E),
-    title: 'Integrations',
-    subtitle: 'Health Kit, Calendar',
   ),
 ];
 
@@ -167,10 +156,9 @@ class _PreferenceTileState extends State<_PreferenceTile> {
                 ),
                 // Trailing: Switch OR optional label + chevron
                 if (widget.tile.isSwitch)
-                  Switch(
+                  GlowToggle(
                     value: _switchValue,
                     onChanged: (val) => setState(() => _switchValue = val),
-                    activeThumbColor: AppColors.primary,
                   )
                 else
                   const Icon(

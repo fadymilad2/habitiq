@@ -9,10 +9,17 @@ import '../../../../core/theme/app_colors.dart';
 /// - 1 (Weekly) → day-of-week chip selector below the slider
 /// - 2 (Custom) → end-date picker button below the slider
 class DurationSection extends StatefulWidget {
-  const DurationSection({super.key, this.frequency = 0});
+  const DurationSection({
+    super.key,
+    this.frequency = 0,
+    required this.onChanged,
+  });
 
   /// 0 = Daily, 1 = Weekly, 2 = Custom
   final int frequency;
+
+  /// Triggered whenever the slider tracking "days target" changes.
+  final ValueChanged<int> onChanged;
 
   @override
   State<DurationSection> createState() => _DurationSectionState();
@@ -153,7 +160,10 @@ class _DurationSectionState extends State<DurationSection> {
                   value: _sliderValue,
                   min: 1,
                   max: 365,
-                  onChanged: (v) => setState(() => _sliderValue = v),
+                  onChanged: (v) {
+                    setState(() => _sliderValue = v);
+                    widget.onChanged(v.round());
+                  },
                 ),
               ),
 

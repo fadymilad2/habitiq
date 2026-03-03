@@ -202,12 +202,13 @@ Completed habits: $completedList
     for (final m in moods) {
       if (m.date.year == now.year && m.date.month == now.month) {
         final score = _moodStringToScore(m.moodType);
-        if (score >= 4.0)
+        if (score >= 4.0) {
           great++;
-        else if (score >= 3.0)
+        } else if (score >= 3.0) {
           okay++;
-        else
+        } else {
           low++;
+        }
       }
     }
 

@@ -128,12 +128,14 @@ class MoodCorrelationCard extends StatelessWidget {
                             interval: 1,
                             reservedSize: 22,
                             getTitlesWidget: (value, meta) {
-                              if (value % 1 != 0)
+                              if (value % 1 != 0) {
                                 return const SizedBox.shrink();
+                              }
 
                               final offset = 6 - value.toInt();
-                              if (offset < 0 || offset > 6)
+                              if (offset < 0 || offset > 6) {
                                 return const SizedBox.shrink();
+                              }
 
                               final date = DateTime.now().subtract(
                                 Duration(days: offset),

@@ -36,6 +36,13 @@ class _NewHabitViewState extends State<NewHabitView> {
   // Frequency index: 0=Daily, 1=Weekly, 2=Custom
   int _frequency = 0;
 
+  // Duration in days
+  int _targetDays = 66;
+
+  // Reminder settings
+  bool _hasReminder = true;
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 8, minute: 0);
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -69,6 +76,17 @@ class _NewHabitViewState extends State<NewHabitView> {
       _selectedIcon,
       _selectedColor,
       frequency: _frequency,
+      targetDays: _targetDays,
+      hasReminder: _hasReminder,
+      reminderTime: _hasReminder
+          ? DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+              _reminderTime.hour,
+              _reminderTime.minute,
+            )
+          : null,
     );
     context.read<DashboardCubit>().changeTab(0);
     Navigator.of(context).pop();
@@ -88,6 +106,11 @@ class _NewHabitViewState extends State<NewHabitView> {
         onSave: _onSave,
         onIconChanged: (icon) => setState(() => _selectedIcon = icon),
         onFrequencyChanged: (f) => setState(() => _frequency = f),
+        onDurationChanged: (days) => setState(() => _targetDays = days),
+        onReminderChanged: (enabled, time) => setState(() {
+          _hasReminder = enabled;
+          _reminderTime = time;
+        }),
         onAiSuggestionLoaded: (iconIndex, colorIndex) {
           setState(() {
             _aiIconIndex = iconIndex;
@@ -113,6 +136,8 @@ class _NewHabitBody extends StatelessWidget {
     required this.onSave,
     required this.onIconChanged,
     required this.onFrequencyChanged,
+    required this.onDurationChanged,
+    required this.onReminderChanged,
     required this.onAiSuggestionLoaded,
   });
 
@@ -125,6 +150,8 @@ class _NewHabitBody extends StatelessWidget {
   final VoidCallback onSave;
   final ValueChanged<IconData> onIconChanged;
   final ValueChanged<int> onFrequencyChanged;
+  final ValueChanged<int> onDurationChanged;
+  final void Function(bool enabled, TimeOfDay time) onReminderChanged;
   final void Function(int iconIndex, int colorIndex) onAiSuggestionLoaded;
 
   @override
@@ -186,11 +213,17 @@ class _NewHabitBody extends StatelessWidget {
                         const SizedBox(height: 28),
 
                         // ── 5. Duration card ────────────────────────────────
-                        DurationSection(frequency: frequency),
+                        DurationSection(
+                          frequency: frequency,
+                          onChanged: onDurationChanged,
+                        ),
                         const SizedBox(height: 28),
 
                         // ── 6. Reminder ─────────────────────────────────────
-                        const ReminderSection(),
+                        ReminderSection(
+                          initialEnabled: true,
+                          onChanged: onReminderChanged,
+                        ),
                         const SizedBox(height: 12),
                       ],
                     ),

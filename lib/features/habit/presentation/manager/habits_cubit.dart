@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:habit_iq/features/habit/data/models/habit_model.dart' as hive;
 import 'package:habit_iq/features/habit/domain/repositories/habit_repository.dart';
 import 'package:habit_iq/features/habit/presentation/manager/habits_state.dart';
-import 'package:habit_iq/features/home/domain/models/habit_model.dart' as ui;
 
 /// ─────────────────────────────────────────────────────────────────────────────
 /// HabitsCubit
@@ -46,14 +45,13 @@ class HabitsCubit extends Cubit<HabitsState> {
         }
       }
 
-      final uiHabits = hiveHabits.map(_toUiModel).toList();
-      final completed = uiHabits.where((h) => h.isCompleted).length;
-      final progress = uiHabits.isEmpty ? 0.0 : completed / uiHabits.length;
+      final completed = hiveHabits.where((h) => h.isCompletedToday).length;
+      final progress = hiveHabits.isEmpty ? 0.0 : completed / hiveHabits.length;
       final streak = _computeOverallStreak(hiveHabits);
 
       emit(
         HabitsLoaded(
-          habits: uiHabits,
+          habits: hiveHabits,
           dailyProgress: progress,
           streakCount: streak,
         ),
@@ -88,6 +86,9 @@ class HabitsCubit extends Cubit<HabitsState> {
     IconData icon,
     Color color, {
     int frequency = 0,
+    int targetDays = 66,
+    bool hasReminder = false,
+    DateTime? reminderTime,
   }) async {
     try {
       final habit = hive.HabitModel(
@@ -98,6 +99,9 @@ class HabitsCubit extends Cubit<HabitsState> {
             '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
         createdAt: DateTime.now(),
         frequency: frequency,
+        targetDays: targetDays,
+        hasReminder: hasReminder,
+        reminderTime: reminderTime,
       );
       await _repo.addHabit(habit);
       loadTodayHabits();
@@ -138,37 +142,21 @@ class HabitsCubit extends Cubit<HabitsState> {
     loadTodayHabits();
   }
 
-  // ── Mapping ────────────────────────────────────────────────────────────────
+  // ── Update Reminder ────────────────────────────────────────────────────────
 
-  /// Maps a Hive [hive.HabitModel] → [ui.HabitModel] for widget consumption.
-  ui.HabitModel _toUiModel(hive.HabitModel h) {
-    return ui.HabitModel(
-      id: h.id,
-      title: h.title,
-      subtitle: _buildSubtitle(h),
-      icon: IconData(h.icon, fontFamily: 'MaterialIcons'),
-      isCompleted: h.isCompletedToday,
-    );
-  }
-
-  /// Builds a subtitle string that reflects the habit's frequency.
-  ///
-  /// - Daily   → "5 day streak · 12 total"
-  /// - Weekly  → "Mon, Wed, Fri · 12 total"  (placeholder days for now)
-  /// - Custom  → "Custom schedule · 12 total"
-  String _buildSubtitle(hive.HabitModel h) {
-    final total = h.totalCompletions;
-    final streak = h.currentStreak;
-
-    switch (h.frequency) {
-      case 1: // Weekly
-        return 'Weekly · $total total';
-      case 2: // Custom
-        return 'Custom schedule · $total total';
-      case 0: // Daily (default)
-      default:
-        if (streak == 0) return '$total total completions';
-        return '$streak day streak · $total total';
+  Future<void> updateReminder(
+    String habitId,
+    bool hasReminder,
+    DateTime? reminderTime,
+  ) async {
+    try {
+      final habit = _repo.getTodayHabits().firstWhere((h) => h.id == habitId);
+      habit.hasReminder = hasReminder;
+      habit.reminderTime = reminderTime;
+      await _repo.updateHabit(habit);
+      loadTodayHabits(); // Refresh UI
+    } catch (e) {
+      emit(HabitsError(e.toString()));
     }
   }
 

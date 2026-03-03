@@ -7,15 +7,37 @@ import '../../../../core/theme/app_colors.dart';
 /// Tapping anywhere on the card (or the time text) opens Flutter's native
 /// [showTimePicker] so the user can pick an exact reminder time.
 class ReminderSection extends StatefulWidget {
-  const ReminderSection({super.key});
+  const ReminderSection({
+    super.key,
+    this.initialEnabled = false,
+    this.initialTime,
+    this.onChanged,
+  });
+
+  final bool initialEnabled;
+  final TimeOfDay? initialTime;
+  final void Function(bool enabled, TimeOfDay time)? onChanged;
 
   @override
   State<ReminderSection> createState() => _ReminderSectionState();
 }
 
 class _ReminderSectionState extends State<ReminderSection> {
-  bool _enabled = true;
-  TimeOfDay _time = const TimeOfDay(hour: 8, minute: 0);
+  late bool _enabled;
+  late TimeOfDay _time;
+
+  @override
+  void initState() {
+    super.initState();
+    _enabled = widget.initialEnabled;
+    _time = widget.initialTime ?? const TimeOfDay(hour: 8, minute: 0);
+  }
+
+  void _notifyChanged() {
+    if (widget.onChanged != null) {
+      widget.onChanged!(_enabled, _time);
+    }
+  }
 
   String get _formattedTime {
     final hour = _time.hourOfPeriod == 0 ? 12 : _time.hourOfPeriod;
@@ -50,6 +72,7 @@ class _ReminderSectionState extends State<ReminderSection> {
     );
     if (picked != null) {
       setState(() => _time = picked);
+      _notifyChanged();
     }
   }
 
@@ -112,7 +135,10 @@ class _ReminderSectionState extends State<ReminderSection> {
             // Custom purple toggle
             _PurpleSwitch(
               value: _enabled,
-              onChanged: (v) => setState(() => _enabled = v),
+              onChanged: (v) {
+                setState(() => _enabled = v);
+                _notifyChanged();
+              },
             ),
           ],
         ),

@@ -1,11 +1,11 @@
 import 'package:equatable/equatable.dart';
-import 'package:habit_iq/features/home/domain/models/habit_model.dart' as ui;
+import 'package:habit_iq/features/habit/data/models/habit_model.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
 /// Sealed state hierarchy for [HabitsCubit].
 ///
-/// The cubit emits the **UI-layer** [ui.HabitModel] list so widgets can use it
-/// directly without any additional mapping in the build tree.
+/// The cubit emits the [HabitModel] list so widgets can use it
+/// directly.
 ///
 /// Flow:
 ///   HabitsInitial → HabitsLoading → HabitsLoaded(habits, dailyProgress)
@@ -40,7 +40,7 @@ final class HabitsLoaded extends HabitsState {
     this.streakCount = 0,
   });
 
-  final List<ui.HabitModel> habits;
+  final List<HabitModel> habits;
 
   /// Completed / total, clamped to [0.0, 1.0].
   final double dailyProgress;
