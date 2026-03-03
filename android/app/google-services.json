@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "933760355804",
+    "project_id": "habitiq-fc18b",
+    "storage_bucket": "habitiq-fc18b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:933760355804:android:918f70f3f075a101c21319",
+        "android_client_info": {
+          "package_name": "com.example.habit_iq"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "933760355804-17t21r2l7mqnkehv4jdveojt9lhsj0ef.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFXp9Bze22579bUpexRe_ogeZwpuUMW-4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "933760355804-17t21r2l7mqnkehv4jdveojt9lhsj0ef.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

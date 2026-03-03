@@ -12,7 +12,8 @@ import 'package:habit_iq/features/habit/presentation/manager/habits_cubit.dart';
 import 'package:habit_iq/features/mood/presentation/manager/ai_cubit.dart';
 import 'package:habit_iq/features/profile/presentation/manager/user_cubit.dart';
 import 'package:habit_iq/features/splash/presentation/pages/splash_view.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'package:habit_iq/firebase_options.dart';
 /// ─────────────────────────────────────────────────────────────────────────────
 /// Entry point
 /// ─────────────────────────────────────────────────────────────────────────────
@@ -23,7 +24,9 @@ Future<void> main() async {
   // 2. Initialise Hive — registers adapters and opens all boxes.
   //    Must complete before we create any Cubit that reads from Hive.
   await HiveService.init();
-
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   // 3. Launch the app.
   runApp(const HabitIq());
 }
