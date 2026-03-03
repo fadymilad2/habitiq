@@ -34,15 +34,22 @@ final class HabitsLoading extends HabitsState {
 /// [habits]        — sorted list of UI-ready habit models for today.
 /// [dailyProgress] — ratio of completed habits (0.0 – 1.0).
 final class HabitsLoaded extends HabitsState {
-  const HabitsLoaded({required this.habits, required this.dailyProgress});
+  const HabitsLoaded({
+    required this.habits,
+    required this.dailyProgress,
+    this.streakCount = 0,
+  });
 
   final List<ui.HabitModel> habits;
 
   /// Completed / total, clamped to [0.0, 1.0].
   final double dailyProgress;
 
+  /// Number of consecutive days where at least one habit was completed.
+  final int streakCount;
+
   @override
-  List<Object?> get props => [habits, dailyProgress];
+  List<Object?> get props => [habits, dailyProgress, streakCount];
 }
 
 /// Something went wrong — carry an optional message for the UI.

@@ -30,23 +30,29 @@ class HomeView extends StatelessWidget {
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: BlocBuilder<UserCubit, UserState>(
-              builder: (context, state) {
-                final name = state is UserAuthenticated
-                    ? state.user.name
-                    : 'guest';
-                final level = state is UserAuthenticated ? state.user.level : 1;
-                final levelProgress = state is UserAuthenticated
-                    ? state.user.levelProgress
-                    : 0.0;
-                final streakCount = state is UserAuthenticated
-                    ? state.user.streakCount
+            child: BlocBuilder<HabitsCubit, HabitsState>(
+              builder: (context, habitsState) {
+                final streakCount = habitsState is HabitsLoaded
+                    ? habitsState.streakCount
                     : 0;
-                return HomeHeader(
-                  userName: name,
-                  level: level,
-                  levelProgress: levelProgress,
-                  streakCount: streakCount,
+                return BlocBuilder<UserCubit, UserState>(
+                  builder: (context, state) {
+                    final name = state is UserAuthenticated
+                        ? state.user.name
+                        : 'guest';
+                    final level = state is UserAuthenticated
+                        ? state.user.level
+                        : 1;
+                    final levelProgress = state is UserAuthenticated
+                        ? state.user.levelProgress
+                        : 0.0;
+                    return HomeHeader(
+                      userName: name,
+                      level: level,
+                      levelProgress: levelProgress,
+                      streakCount: streakCount,
+                    );
+                  },
                 );
               },
             ),
@@ -109,14 +115,17 @@ class HomeView extends StatelessWidget {
                   final habit = state.habits[index];
                   return HabitCard(
                     habit: habit,
-                    // Toggle wired to HabitsCubit — persists to Hive.
-                    // Also triggers an immediate analytics refresh so the
-                    // Analytics tab is always up-to-date in the background.
                     onToggle: () {
+                      final wasCompleted = habit.isCompleted;
                       context.read<HabitsCubit>().toggleHabitCompletion(
                         habit.id,
                       );
                       context.read<AnalyticsCubit>().loadAnalytics();
+                      if (!wasCompleted) {
+                        context.read<UserCubit>().addXp(10);
+                      } else {
+                        context.read<UserCubit>().removeXp(10);
+                      }
                     },
                   );
                 }, childCount: state.habits.length),

@@ -38,7 +38,13 @@ final class UserAuthenticated extends UserState {
   final UserModel user;
 
   @override
-  List<Object?> get props => [user.id, user.name, user.avatarPath, user.level];
+  List<Object?> get props => [
+    user.id,
+    user.name,
+    user.avatarPath,
+    user.level,
+    user.xp,
+  ];
 }
 
 /// No user is saved in Hive — show auth / onboarding screens.

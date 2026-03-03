@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 /// ─────────────────────────────────────────────────────────────────────────────
 /// Sealed state hierarchy for [AICubit].
@@ -30,13 +31,33 @@ final class AILoading extends AIState {
 /// [message]     — the 2-sentence motivational message from the model.
 /// [currentMood] — the mood label the user selected (e.g. "Happy").
 final class AILoaded extends AIState {
-  const AILoaded({required this.message, required this.currentMood});
+  const AILoaded({
+    required this.message,
+    required this.currentMood,
+    this.moodChartData = const [],
+    this.habitChartData = const [],
+    this.monthlyMoodCounts = const {},
+    this.correlationValue = 0.0,
+  });
 
   final String message;
   final String currentMood;
 
+  // Data for the Analytics UI in Mood Tab
+  final List<FlSpot> moodChartData;
+  final List<FlSpot> habitChartData;
+  final Map<String, int> monthlyMoodCounts;
+  final double correlationValue;
+
   @override
-  List<Object?> get props => [message, currentMood];
+  List<Object?> get props => [
+    message,
+    currentMood,
+    moodChartData,
+    habitChartData,
+    monthlyMoodCounts,
+    correlationValue,
+  ];
 }
 
 /// The request failed (network error, bad API key, quota exceeded, etc.).

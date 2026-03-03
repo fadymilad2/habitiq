@@ -8,18 +8,7 @@ import 'package:habit_iq/features/home/domain/models/habit_model.dart' as ui;
 /// ─────────────────────────────────────────────────────────────────────────────
 /// HabitsCubit
 ///
-/// Single source of truth for the habits list and daily progress.
-///
-/// Architecture note: the cubit owns the mapping between the Hive entity
-/// ([hive.HabitModel]) and the UI entity ([ui.HabitModel]). This keeps widgets
-/// dumb — they only know about the UI model.
-///
-/// Wire up in main.dart:
-/// ```dart
-/// BlocProvider<HabitsCubit>(
-///   create: (_) => HabitsCubit(HabitRepositoryImpl())..loadTodayHabits(),
-/// )
-/// ```
+/// Single source of truth for the habits list, daily progress, and streak.
 /// ─────────────────────────────────────────────────────────────────────────────
 class HabitsCubit extends Cubit<HabitsState> {
   HabitsCubit(this._repo) : super(const HabitsInitial());
@@ -28,17 +17,11 @@ class HabitsCubit extends Cubit<HabitsState> {
 
   // ── Load ───────────────────────────────────────────────────────────────────
 
-  /// Reads all habits from Hive, maps them to UI models, calculates
-  /// daily progress, and emits [HabitsLoaded].
-  ///
-  /// Call once on startup and after every mutation.
   void loadTodayHabits() {
     try {
       final hiveHabits = _repo.getTodayHabits();
 
-      // One-time cleanup: delete any habit seeded by a previous build.
-      // Safe to await-forget — the next loadTodayHabits call (after deletion)
-      // will see a clean box.
+      // One-time cleanup: delete sample habits seeded by a previous build.
       final sampleIds = hiveHabits
           .where((h) => h.id.startsWith('sample_'))
           .map((h) => h.id)
@@ -50,11 +33,49 @@ class HabitsCubit extends Cubit<HabitsState> {
         return;
       }
 
+      // Auto-reset: if a habit is flagged completed but was done on a
+      // previous day (not today), clear the stale flag.
+      final today = _today();
+      for (final h in hiveHabits) {
+        if (h.isCompletedToday) {
+          final doneToday = h.completionDates.any((d) => _sameDay(d, today));
+          if (!doneToday) {
+            h.isCompletedToday = false;
+            h.save(); // persist to Hive synchronously
+          }
+        }
+      }
+
       final uiHabits = hiveHabits.map(_toUiModel).toList();
       final completed = uiHabits.where((h) => h.isCompleted).length;
       final progress = uiHabits.isEmpty ? 0.0 : completed / uiHabits.length;
+      final streak = _computeOverallStreak(hiveHabits);
 
-      emit(HabitsLoaded(habits: uiHabits, dailyProgress: progress));
+      emit(
+        HabitsLoaded(
+          habits: uiHabits,
+          dailyProgress: progress,
+          streakCount: streak,
+        ),
+      );
+    } catch (e) {
+      emit(HabitsError(e.toString()));
+    }
+  }
+
+  /// Resets the `isCompletedToday` flag for all habits.
+  ///
+  /// This is useful for testing or for manually resetting daily progress.
+  Future<void> resetDailyFlags() async {
+    try {
+      final hiveHabits = _repo.getTodayHabits();
+      for (final h in hiveHabits) {
+        if (h.isCompletedToday) {
+          h.isCompletedToday = false;
+          await _repo.updateHabit(h); // Persist the change
+        }
+      }
+      loadTodayHabits(); // Reload habits to reflect changes
     } catch (e) {
       emit(HabitsError(e.toString()));
     }
@@ -62,9 +83,12 @@ class HabitsCubit extends Cubit<HabitsState> {
 
   // ── Add ────────────────────────────────────────────────────────────────────
 
-  /// Creates a new [hive.HabitModel] from the given parameters, saves it to
-  /// Hive, then refreshes the list.
-  Future<void> addNewHabit(String title, IconData icon, Color color) async {
+  Future<void> addNewHabit(
+    String title,
+    IconData icon,
+    Color color, {
+    int frequency = 0,
+  }) async {
     try {
       final habit = hive.HabitModel(
         id: 'habit_${DateTime.now().millisecondsSinceEpoch}',
@@ -73,6 +97,7 @@ class HabitsCubit extends Cubit<HabitsState> {
         colorHex:
             '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
         createdAt: DateTime.now(),
+        frequency: frequency,
       );
       await _repo.addHabit(habit);
       loadTodayHabits();
@@ -83,10 +108,7 @@ class HabitsCubit extends Cubit<HabitsState> {
 
   // ── Toggle ─────────────────────────────────────────────────────────────────
 
-  /// Finds the habit with [id], flips [isCompletedToday], syncs
-  /// [completionDates], persists to Hive, then refreshes the list.
   Future<void> toggleHabitCompletion(String id) async {
-    // Read directly from the box so we always work on the latest data.
     final habit = _repo.getTodayHabits().firstWhere(
       (h) => h.id == id,
       orElse: () => throw StateError('Habit $id not found'),
@@ -96,11 +118,9 @@ class HabitsCubit extends Cubit<HabitsState> {
     final alreadyCompleted = habit.isCompletedToday;
 
     if (alreadyCompleted) {
-      // Un-complete: remove today from completionDates.
       habit.completionDates.removeWhere((d) => _sameDay(d, today));
       habit.isCompletedToday = false;
     } else {
-      // Complete: add today if not already present.
       if (!habit.completionDates.any((d) => _sameDay(d, today))) {
         habit.completionDates.add(today);
       }
@@ -113,7 +133,6 @@ class HabitsCubit extends Cubit<HabitsState> {
 
   // ── Delete ─────────────────────────────────────────────────────────────────
 
-  /// Removes a habit permanently from Hive and refreshes the list.
   Future<void> deleteHabit(String id) async {
     await _repo.deleteHabit(id);
     loadTodayHabits();
@@ -126,10 +145,59 @@ class HabitsCubit extends Cubit<HabitsState> {
     return ui.HabitModel(
       id: h.id,
       title: h.title,
-      subtitle: '${h.currentStreak} day streak · ${h.totalCompletions} total',
+      subtitle: _buildSubtitle(h),
       icon: IconData(h.icon, fontFamily: 'MaterialIcons'),
       isCompleted: h.isCompletedToday,
     );
+  }
+
+  /// Builds a subtitle string that reflects the habit's frequency.
+  ///
+  /// - Daily   → "5 day streak · 12 total"
+  /// - Weekly  → "Mon, Wed, Fri · 12 total"  (placeholder days for now)
+  /// - Custom  → "Custom schedule · 12 total"
+  String _buildSubtitle(hive.HabitModel h) {
+    final total = h.totalCompletions;
+    final streak = h.currentStreak;
+
+    switch (h.frequency) {
+      case 1: // Weekly
+        return 'Weekly · $total total';
+      case 2: // Custom
+        return 'Custom schedule · $total total';
+      case 0: // Daily (default)
+      default:
+        if (streak == 0) return '$total total completions';
+        return '$streak day streak · $total total';
+    }
+  }
+
+  // ── Overall streak computation ──────────────────────────────────────────────
+
+  /// Counts consecutive days (going backwards from today) on which at least
+  /// one daily habit was marked completed.
+  int _computeOverallStreak(List<hive.HabitModel> habits) {
+    if (habits.isEmpty) return 0;
+
+    // Collect unique days where any habit was completed.
+    final completedDays = <DateTime>{};
+    for (final h in habits) {
+      for (final d in h.completionDates) {
+        completedDays.add(DateTime(d.year, d.month, d.day));
+      }
+    }
+
+    if (completedDays.isEmpty) return 0;
+
+    int streak = 0;
+    DateTime cursor = _today();
+
+    while (completedDays.contains(cursor)) {
+      streak++;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+
+    return streak;
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────

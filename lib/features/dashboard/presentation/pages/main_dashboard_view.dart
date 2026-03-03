@@ -38,68 +38,65 @@ class MainDashboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
 
-    return BlocProvider(
-      create: (context) => DashboardCubit(),
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        extendBody: true,
-        body: BlocBuilder<DashboardCubit, int>(
-          builder: (context, currentIndex) {
-            return AppBackground(
-              child: Stack(
-                children: [
-                  // ── Main Content Tabs ─────────────────────────────────────────
-                  IndexedStack(
-                    index: currentIndex,
-                    children: [
-                      // 0: Home view
-                      const HomeView(),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      extendBody: true,
+      body: BlocBuilder<DashboardCubit, int>(
+        builder: (context, currentIndex) {
+          return AppBackground(
+            child: Stack(
+              children: [
+                // ── Main Content Tabs ─────────────────────────────────────────
+                IndexedStack(
+                  index: currentIndex,
+                  children: [
+                    // 0: Home view
+                    const HomeView(),
 
-                      // 1: Analytics view
-                      Padding(
-                        padding: EdgeInsets.only(top: topPadding),
-                        child: const AnalyticsView(),
-                      ),
-
-                      // 2: AI Mood view
-                      Padding(
-                        padding: EdgeInsets.only(top: topPadding),
-                        child: const AIMoodView(),
-                      ),
-
-                      // 3: Profile view
-                      Padding(
-                        padding: EdgeInsets.only(top: topPadding),
-                        child: const ProfileView(),
-                      ),
-                    ],
-                  ),
-
-                  // ── Floating Nav Bar ─────────────────────────────────────────
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: CustomFloatingNavBar(
-                      currentIndex: currentIndex,
-                      onTap: (index) {
-                        // Switch the active tab.
-                        context.read<DashboardCubit>().changeTab(index);
-                        // When the user navigates to the Analytics or Profile tab,
-                        // immediately refresh analytics so the chart and stats reflect
-                        // any habit completions done since the last visit.
-                        if (index == 1 || index == 3) {
-                          context.read<AnalyticsCubit>().loadAnalytics();
-                        }
-                      },
-                      onFabTap: () => _onAddHabit(context),
+                    // 1: Analytics view
+                    Padding(
+                      padding: EdgeInsets.only(top: topPadding),
+                      child: const AnalyticsView(),
                     ),
+
+                    // 2: AI Mood view
+                    Padding(
+                      padding: EdgeInsets.only(top: topPadding),
+                      child: const AIMoodView(),
+                    ),
+
+                    // 3: Profile view
+                    Padding(
+                      padding: EdgeInsets.only(top: topPadding),
+                      child: const ProfileView(),
+                    ),
+                  ],
+                ),
+
+                // ── Floating Nav Bar ─────────────────────────────────────────
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: CustomFloatingNavBar(
+                    currentIndex: currentIndex,
+                    onTap: (index) {
+                      // Switch the active tab.
+                      context.read<DashboardCubit>().changeTab(index);
+                      // When the user navigates to the Analytics or Profile tab,
+                      // immediately refresh analytics so the chart and stats reflect
+                      // any habit completions done since the last visit.
+                      if (index == 1 || index == 3) {
+                        context.read<AnalyticsCubit>().loadAnalytics();
+                      }
+                    },
+                    onFabTap: () => _onAddHabit(context),
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

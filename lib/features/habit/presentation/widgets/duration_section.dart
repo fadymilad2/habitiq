@@ -2,42 +2,81 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 
-/// Duration section: Count / Date toggle, target-days display, and a custom
-/// glowing Slider. The Save FAB is rendered at Scaffold level so it stays fixed.
+/// Duration section with a days-target slider.
+///
+/// Adapts its secondary picker based on [frequency]:
+/// - 0 (Daily)  → slider only
+/// - 1 (Weekly) → day-of-week chip selector below the slider
+/// - 2 (Custom) → end-date picker button below the slider
 class DurationSection extends StatefulWidget {
-  const DurationSection({super.key});
+  const DurationSection({super.key, this.frequency = 0});
+
+  /// 0 = Daily, 1 = Weekly, 2 = Custom
+  final int frequency;
 
   @override
   State<DurationSection> createState() => _DurationSectionState();
 }
 
 class _DurationSectionState extends State<DurationSection> {
-  bool _isCount = true; // true = Count tab, false = Date tab
   double _sliderValue = 66;
+
+  // Weekly: set of selected day indices (0=Mon … 6=Sun)
+  final Set<int> _selectedDays = {0}; // Monday selected by default
+
+  // Custom: chosen end date
+  DateTime? _endDate;
+
+  static const _dayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+
+  Future<void> _pickEndDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? now.add(const Duration(days: 30)),
+      firstDate: now,
+      lastDate: DateTime(now.year + 5),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              surface: AppColors.surface,
+              onSurface: Colors.white,
+            ),
+            datePickerTheme: const DatePickerThemeData(
+              backgroundColor: AppColors.surface,
+              headerBackgroundColor: AppColors.primary,
+              headerForegroundColor: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) setState(() => _endDate = picked);
+  }
+
+  String get _formattedEndDate {
+    if (_endDate == null) return 'Pick end date';
+    return '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Header row ───────────────────────────────────────────────────
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'DURATION',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-                letterSpacing: 1.5,
-              ),
-            ),
-            _CountDateToggle(
-              isCount: _isCount,
-              onTap: () => setState(() => _isCount = !_isCount),
-            ),
-          ],
+        // ── Section label ─────────────────────────────────────────────────
+        Text(
+          'DURATION',
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+            letterSpacing: 1.5,
+          ),
         ),
         const SizedBox(height: 12),
 
@@ -64,7 +103,7 @@ class _DurationSectionState extends State<DurationSection> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'Choose up to 365 days or select end date',
+                  'Choose up to 365 days target',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.spaceGrotesk(
                     fontSize: 12,
@@ -141,66 +180,141 @@ class _DurationSectionState extends State<DurationSection> {
                   ],
                 ),
               ),
+
+              // ── Weekly: day-of-week chip row ───────────────────────────
+              if (widget.frequency == 1) ...[
+                const SizedBox(height: 20),
+                Text(
+                  'REPEAT ON',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(7, (i) {
+                    final active = _selectedDays.contains(i);
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (active && _selectedDays.length > 1) {
+                            _selectedDays.remove(i);
+                          } else {
+                            _selectedDays.add(i);
+                          }
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: active
+                              ? AppColors.primary
+                              : AppColors.surfaceHighlight,
+                          shape: BoxShape.circle,
+                          boxShadow: active
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    blurRadius: 8,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _dayLabels[i],
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 11,
+                            fontWeight: active
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                            color: active
+                                ? Colors.white
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+
+              // ── Custom: end-date picker button ─────────────────────────
+              if (widget.frequency == 2) ...[
+                const SizedBox(height: 20),
+                Text(
+                  'END DATE',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: _pickEndDate,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceHighlight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _endDate != null
+                            ? AppColors.primary.withValues(alpha: 0.6)
+                            : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 18,
+                          color: _endDate != null
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _formattedEndDate,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 14,
+                            fontWeight: _endDate != null
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: _endDate != null
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        const Spacer(),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Count / Date mini-toggle ──────────────────────────────────────────────────
-
-class _CountDateToggle extends StatelessWidget {
-  const _CountDateToggle({required this.isCount, required this.onTap});
-  final bool isCount;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 30,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _Tab(label: 'Count', active: isCount),
-            _Tab(label: 'Date', active: !isCount),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Tab extends StatelessWidget {
-  const _Tab({required this.label, required this.active});
-  final String label;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      margin: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: active ? AppColors.primary : Colors.transparent,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.spaceGrotesk(
-          fontSize: 12,
-          fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-          color: active ? Colors.white : AppColors.textSecondary,
-        ),
-      ),
     );
   }
 }

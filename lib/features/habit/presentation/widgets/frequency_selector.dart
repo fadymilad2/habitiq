@@ -4,9 +4,13 @@ import '../../../../core/theme/app_colors.dart';
 
 /// Custom segmented-control row for selecting habit frequency.
 ///
-/// Manages its own [_selected] index. Labels: Daily / Weekly / Custom.
+/// Reports changes via [onChanged]. Labels: Daily / Weekly / Custom.
 class FrequencySelector extends StatefulWidget {
-  const FrequencySelector({super.key});
+  const FrequencySelector({super.key, this.onChanged});
+
+  /// Called with the new index whenever the user switches frequency.
+  /// 0 = Daily, 1 = Weekly, 2 = Custom
+  final ValueChanged<int>? onChanged;
 
   @override
   State<FrequencySelector> createState() => _FrequencySelectorState();
@@ -46,7 +50,10 @@ class _FrequencySelectorState extends State<FrequencySelector> {
               final isSelected = i == _selected;
               return Expanded(
                 child: GestureDetector(
-                  onTap: () => setState(() => _selected = i),
+                  onTap: () {
+                    setState(() => _selected = i);
+                    widget.onChanged?.call(i);
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: const EdgeInsets.all(4),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:habit_iq/features/mood/presentation/widgets/ai_mood_header.dart';
 import 'package:habit_iq/features/mood/presentation/widgets/ai_suggestion_card.dart';
-import 'package:habit_iq/features/mood/presentation/widgets/mood_correlation_card.dart';
 import 'package:habit_iq/features/mood/presentation/widgets/mood_selector_section.dart';
 import 'package:habit_iq/features/mood/presentation/widgets/this_month_summary.dart';
 
@@ -34,12 +33,7 @@ class AIMoodView extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // 4. Mood Correlation Chart ─────────────────────────────────────
-              const MoodCorrelationCard(),
-
-              const SizedBox(height: 20),
-
-              // 5. This Month Summary ─────────────────────────────────────────
+              // 4. This Month Summary ─────────────────────────────────────────
               const ThisMonthSummary(),
 
               // Extra bottom padding so the floating nav bar doesn't

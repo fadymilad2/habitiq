@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:habit_iq/core/data/services/hive_service.dart';
 import 'package:habit_iq/core/theme/app_theme.dart';
 import 'package:habit_iq/core/theme/theme_cubit.dart';
+import 'package:habit_iq/core/utils/daily_reset_observer.dart';
 import 'package:habit_iq/features/auth/data/repositories/user_repository_impl.dart';
 import 'package:habit_iq/features/analytics/presentation/manager/analytics_cubit.dart';
 import 'package:habit_iq/features/dashboard/presentation/manager/dashboard_cubit.dart';
@@ -49,20 +50,17 @@ class HabitIq extends StatelessWidget {
         BlocProvider<AnalyticsCubit>(
           create: (_) => AnalyticsCubit(HabitRepositoryImpl())..loadAnalytics(),
         ),
-        BlocProvider<AICubit>(create: (_) => AICubit()),
+        BlocProvider<AICubit>(create: (_) => AICubit(HabitRepositoryImpl())),
       ],
-      child: BlocBuilder<ThemeCubit, ThemeMode>(
-        builder: (context, themeMode) {
-          return MaterialApp(
-            title: 'HabitIQ',
-            debugShowCheckedModeBanner: false,
-            // Supply both themes so the OS / cubit can switch seamlessly.
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeMode,
-            home: const SplashView(),
-          );
-        },
+      child: DailyResetObserver(
+        child: MaterialApp(
+          title: 'HabitIQ',
+          debugShowCheckedModeBanner: false,
+          // Supply both themes so the OS / cubit can switch seamlessly.
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          home: const SplashView(),
+        ),
       ),
     );
   }

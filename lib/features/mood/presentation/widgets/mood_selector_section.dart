@@ -73,10 +73,11 @@ class _MoodSelectorSectionState extends State<MoodSelectorSection> {
           .toList();
     }
 
-    context.read<AICubit>().generateDailyInsight(
+    context.read<AICubit>().logMoodAndGenerateInsight(
       userName,
       progress,
       mood,
+      3, // Explicitly passing 3 as fallback for mood intensity
       completedTitles,
     );
   }

@@ -30,6 +30,10 @@ class HabitModel extends HiveObject {
   @HiveField(6)
   final DateTime createdAt;
 
+  /// Frequency: 0 = Daily, 1 = Weekly, 2 = Custom.
+  @HiveField(7)
+  int frequency;
+
   HabitModel({
     required this.id,
     required this.title,
@@ -38,6 +42,7 @@ class HabitModel extends HiveObject {
     this.isCompletedToday = false,
     List<DateTime>? completionDates,
     required this.createdAt,
+    this.frequency = 0,
   }) : completionDates = completionDates ?? [];
 
   /// Marks today as completed and sets [isCompletedToday] to `true`.

@@ -92,6 +92,69 @@ class UserCubit extends Cubit<UserState> {
     }
   }
 
+  // ── XP & Levelling ─────────────────────────────────────────────────────────
+
+  /// Awards [amount] XP to the current user and handles level-ups.
+  ///
+  /// Safe to call multiple times — each call persists the result to Hive.
+  /// Does nothing if no user is currently authenticated.
+  Future<void> addXp(int amount) async {
+    final current = state;
+    if (current is! UserAuthenticated) return;
+
+    int newXp = current.user.xp + amount;
+    int newLevel = current.user.level;
+
+    while (newXp >= UserModel.xpPerLevel) {
+      newXp -= UserModel.xpPerLevel;
+      newLevel++;
+    }
+
+    final updated = UserModel(
+      id: current.user.id,
+      name: current.user.name,
+      avatarPath: current.user.avatarPath,
+      level: newLevel,
+      xp: newXp,
+      streakCount: current.user.streakCount,
+      createdAt: current.user.createdAt,
+    );
+
+    emit(UserAuthenticated(updated));
+    await _repo.updateUser(updated);
+  }
+
+  /// Removes [amount] XP when a habit is unchecked. Handles level-down.
+  /// XP never goes below 0 / level below 1.
+  Future<void> removeXp(int amount) async {
+    final current = state;
+    if (current is! UserAuthenticated) return;
+
+    int newXp = current.user.xp - amount;
+    int newLevel = current.user.level;
+
+    // Level down if XP dips below 0 (carry over into previous level).
+    while (newXp < 0 && newLevel > 1) {
+      newLevel--;
+      newXp += UserModel.xpPerLevel;
+    }
+    // Floor at 0 XP on level 1 — can't go negative.
+    if (newXp < 0) newXp = 0;
+
+    final updated = UserModel(
+      id: current.user.id,
+      name: current.user.name,
+      avatarPath: current.user.avatarPath,
+      level: newLevel,
+      xp: newXp,
+      streakCount: current.user.streakCount,
+      createdAt: current.user.createdAt,
+    );
+
+    emit(UserAuthenticated(updated));
+    await _repo.updateUser(updated);
+  }
+
   // ── Logout ─────────────────────────────────────────────────────────────────
 
   /// Clears the Hive session and emits [UserUnauthenticated].
