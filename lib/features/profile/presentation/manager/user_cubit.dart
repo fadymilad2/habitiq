@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:habit_iq/core/data/services/hive_service.dart';
 import 'package:habit_iq/features/auth/domain/repositories/user_repository.dart';
 import 'package:habit_iq/features/profile/data/models/user_model.dart';
 import 'package:habit_iq/features/profile/presentation/manager/user_state.dart';
@@ -58,6 +59,60 @@ class UserCubit extends Cubit<UserState> {
       emit(UserAuthenticated(dummyUser));
     } catch (e) {
       // On unexpected errors fall back to unauthenticated so the UI stays safe.
+      emit(const UserUnauthenticated());
+    }
+  }
+
+  /// Loads or creates a persistent profile for a real (non-anonymous) Firebase user.
+  ///
+  /// - If a local profile already exists (returning user), it is reused as-is.
+  /// - If no local profile exists (new registration), a fresh one is created
+  ///   with the [displayName] entered during sign-up.
+  Future<void> loginRealUser(String uid, String displayName) async {
+    emit(const UserLoading());
+    try {
+      // checkAuthStatus path first — a pullFromCloud may have just populated Hive.
+      var existing = _repo.getCurrentUser();
+      if (existing != null) {
+        emit(UserAuthenticated(existing));
+        return;
+      }
+      // No profile found in Hive — new user, create one.
+      final newUser = UserModel(
+        id: uid,
+        name: displayName,
+        level: 1,
+        xp: 0,
+        streakCount: 0,
+        createdAt: DateTime.now(),
+      );
+      await _repo.saveUser(newUser);
+      emit(UserAuthenticated(newUser));
+    } catch (e) {
+      emit(const UserUnauthenticated());
+    }
+  }
+
+  /// Creates a fresh guest profile in Hive linked to the given Firebase UID.
+  ///
+  /// Wipes ALL previous Hive data first so the new guest starts completely
+  /// clean (no leftover habits, moods, or user profile from the last session).
+  Future<void> loginGuestUser(String firebaseUid) async {
+    emit(const UserLoading());
+    try {
+      // Erase every user-specific box before writing the new profile.
+      await HiveService.clearAllUserData();
+      final guestUser = UserModel(
+        id: firebaseUid,
+        name: 'Guest',
+        level: 1,
+        xp: 0,
+        streakCount: 0,
+        createdAt: DateTime.now(),
+      );
+      await _repo.saveUser(guestUser);
+      emit(UserAuthenticated(guestUser));
+    } catch (e) {
       emit(const UserUnauthenticated());
     }
   }

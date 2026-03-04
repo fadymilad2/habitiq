@@ -11,9 +11,11 @@ import 'package:habit_iq/features/habit/data/repositories/habit_repository_impl.
 import 'package:habit_iq/features/habit/presentation/manager/habits_cubit.dart';
 import 'package:habit_iq/features/mood/presentation/manager/ai_cubit.dart';
 import 'package:habit_iq/features/profile/presentation/manager/user_cubit.dart';
-import 'package:habit_iq/features/splash/presentation/pages/splash_view.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:habit_iq/features/auth/presentation/manager/auth_cubit.dart';
+import 'package:habit_iq/features/splash/presentation/pages/splash_view.dart';
 import 'package:habit_iq/firebase_options.dart';
+
 /// ─────────────────────────────────────────────────────────────────────────────
 /// Entry point
 /// ─────────────────────────────────────────────────────────────────────────────
@@ -24,9 +26,7 @@ Future<void> main() async {
   // 2. Initialise Hive — registers adapters and opens all boxes.
   //    Must complete before we create any Cubit that reads from Hive.
   await HiveService.init();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // 3. Launch the app.
   runApp(const HabitIq());
 }
@@ -54,6 +54,7 @@ class HabitIq extends StatelessWidget {
           create: (_) => AnalyticsCubit(HabitRepositoryImpl())..loadAnalytics(),
         ),
         BlocProvider<AICubit>(create: (_) => AICubit(HabitRepositoryImpl())),
+        BlocProvider<AuthCubit>(create: (_) => AuthCubit()),
       ],
       child: DailyResetObserver(
         child: MaterialApp(
@@ -62,6 +63,9 @@ class HabitIq extends StatelessWidget {
           // Supply both themes so the OS / cubit can switch seamlessly.
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
+          // SplashView is always the first screen.
+          // SplashCubit calls checkAuthStatus() after the animation and then
+          // navigates to AuthView or MainDashboardView via pushReplacement.
           home: const SplashView(),
         ),
       ),

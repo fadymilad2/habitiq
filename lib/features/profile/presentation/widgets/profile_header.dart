@@ -1,21 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
-import 'package:habit_iq/core/theme/theme_cubit.dart';
+import 'package:habit_iq/features/profile/presentation/widgets/edit_profile_sheet.dart';
 
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({super.key});
-
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,26 +12,7 @@ class ProfileHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          // Theme Toggle button
-          GestureDetector(
-            onTap: () => context.read<ThemeCubit>().toggleTheme(),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                ),
-              ),
-              child: const Icon(
-                Icons.dark_mode_rounded,
-                color: AppColors.textSecondary,
-                size: 20,
-              ),
-            ),
-          ),
+          const SizedBox(width: 50),
           // Title
           Expanded(
             child: Center(
@@ -56,9 +26,10 @@ class ProfileHeader extends StatelessWidget {
               ),
             ),
           ),
+
           // Edit button
           TextButton(
-            onPressed: () => _showSnackBar(context, 'Edit Profile ✏️'),
+            onPressed: () => EditProfileSheet.show(context),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               minimumSize: const Size(40, 40),

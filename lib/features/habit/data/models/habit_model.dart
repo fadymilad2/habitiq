@@ -132,4 +132,47 @@ class HabitModel extends HiveObject {
   @override
   String toString() =>
       'HabitModel(id: $id, title: $title, streak: $currentStreak)';
+
+  // ── serialization for cloud sync ───────────────────────────────────────────
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'icon': icon,
+      'colorHex': colorHex,
+      'isCompletedToday': isCompletedToday,
+      'completionDates': completionDates
+          .map((d) => d.toIso8601String())
+          .toList(),
+      'createdAt': createdAt.toIso8601String(),
+      'frequency': frequency,
+      'targetDays': targetDays,
+      'hasReminder': hasReminder,
+      'reminderTime': reminderTime?.toIso8601String(),
+    };
+  }
+
+  factory HabitModel.fromMap(Map<String, dynamic> map, String id) {
+    return HabitModel(
+      id: id,
+      title: map['title'] as String? ?? 'Untitled',
+      icon: map['icon'] as int? ?? 0xe242,
+      colorHex: map['colorHex'] as String? ?? '#7C3AED',
+      isCompletedToday: map['isCompletedToday'] as bool? ?? false,
+      completionDates:
+          (map['completionDates'] as List<dynamic>?)
+              ?.map((d) => DateTime.parse(d as String))
+              .toList() ??
+          [],
+      createdAt: map['createdAt'] != null
+          ? DateTime.parse(map['createdAt'] as String)
+          : DateTime.now(),
+      frequency: map['frequency'] as int? ?? 0,
+      targetDays: map['targetDays'] as int? ?? 66,
+      hasReminder: map['hasReminder'] as bool? ?? false,
+      reminderTime: map['reminderTime'] != null
+          ? DateTime.parse(map['reminderTime'] as String)
+          : null,
+    );
+  }
 }

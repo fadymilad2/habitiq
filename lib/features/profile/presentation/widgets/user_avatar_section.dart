@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
 import 'package:habit_iq/features/profile/presentation/manager/user_cubit.dart';
 import 'package:habit_iq/features/profile/presentation/manager/user_state.dart';
+
+import 'package:habit_iq/features/profile/presentation/widgets/edit_profile_sheet.dart';
 
 class UserAvatarSection extends StatelessWidget {
   const UserAvatarSection({super.key});
@@ -12,73 +15,95 @@ class UserAvatarSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<UserCubit, UserState>(
       builder: (context, state) {
-        // Resolve live data from state; fall back to safe defaults while loading.
         final name = state is UserAuthenticated ? state.user.name : '—';
         final level = state is UserAuthenticated ? state.user.level : 1;
-        final avatarUrl =
-            (state is UserAuthenticated &&
-                state.user.avatarPath != null &&
-                state.user.avatarPath!.startsWith('http'))
-            ? state.user.avatarPath!
-            : 'https://i.pravatar.cc/200?img=11';
+        final String? avatarStr = state is UserAuthenticated
+            ? state.user.avatarPath
+            : null;
+        final bool isNetwork =
+            avatarStr != null && avatarStr.startsWith('http');
 
         return Column(
           children: [
             // Avatar with glow & camera badge
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.55),
-                        blurRadius: 28,
-                        spreadRadius: 4,
+            GestureDetector(
+              onTap: () => EditProfileSheet.show(context),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.55),
+                          blurRadius: 28,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 50,
+                      backgroundColor: const Color(0xFF2E1F4E),
+                      child: ClipOval(
+                        child: avatarStr == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 56,
+                                color: AppColors.textSecondary,
+                              )
+                            : isNetwork
+                            ? Image.network(
+                                avatarStr,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => const Icon(
+                                  Icons.person,
+                                  size: 56,
+                                  color: AppColors.textSecondary,
+                                ),
+                              )
+                            : Image.file(
+                                File(avatarStr),
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => const Icon(
+                                  Icons.person,
+                                  size: 56,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
                       ),
-                    ],
+                    ),
                   ),
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: const Color(0xFF2E1F4E),
-                    child: ClipOval(
-                      child: Image.network(
-                        avatarUrl,
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const Icon(
-                          Icons.person,
-                          size: 56,
-                          color: AppColors.textSecondary,
+                  // Camera badge
+                  Positioned(
+                    bottom: 2,
+                    right: -2,
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.background,
+                          width: 2,
                         ),
                       ),
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: Colors.white,
+                        size: 13,
+                      ),
                     ),
                   ),
-                ),
-                // Camera badge
-                Positioned(
-                  bottom: 2,
-                  right: -2,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.background, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: Colors.white,
-                      size: 13,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 14),
             // ── Name (live from UserCubit) ─────────────────────────────────

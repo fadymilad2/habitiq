@@ -81,6 +81,14 @@ class HiveService {
     }
   }
 
+  /// Clears all user-specific data from Hive.
+  ///
+  /// Call this before starting a new user session (guest or otherwise) so the
+  /// new user starts with a completely clean slate.
+  static Future<void> clearAllUserData() async {
+    await Future.wait([habitsBox.clear(), moodsBox.clear(), userBox.clear()]);
+  }
+
   /// Safely closes all open boxes — call on app disposal if needed.
   static Future<void> close() async {
     await Hive.close();

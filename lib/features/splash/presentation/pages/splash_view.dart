@@ -9,7 +9,7 @@ import '../widgets/splash_loading_bar.dart';
 import '../../../dashboard/presentation/pages/main_dashboard_view.dart';
 import '../../../onboarding/presentation/pages/onboarding_view.dart';
 import '../../../auth/presentation/pages/auth_view.dart';
-import '../../../profile/presentation/manager/user_cubit.dart';
+import '../../../auth/presentation/manager/auth_cubit.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -51,7 +51,7 @@ class _SplashViewState extends State<SplashView>
     return BlocProvider(
       // Pass the UserCubit (already provided at root) into SplashCubit
       // so it can read auth state after the animation delay.
-      create: (context) => SplashCubit(context.read<UserCubit>()),
+      create: (context) => SplashCubit(context.read<AuthCubit>()),
       child: BlocListener<SplashCubit, SplashState>(
         listener: (context, state) {
           if (state is SplashNavigateToOnboarding) {

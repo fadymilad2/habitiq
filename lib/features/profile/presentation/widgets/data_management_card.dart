@@ -1,10 +1,116 @@
+import 'dart:developer';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
+import 'package:habit_iq/features/auth/presentation/manager/auth_cubit.dart';
+import 'package:habit_iq/features/auth/presentation/manager/auth_state.dart';
+import 'package:habit_iq/features/profile/presentation/manager/user_cubit.dart';
+import 'package:habit_iq/features/profile/presentation/manager/user_state.dart';
+import 'package:habit_iq/features/sync/data/sync_repository.dart';
+import 'package:habit_iq/features/sync/presentation/sync_dialog.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:habit_iq/features/habit/data/models/habit_model.dart';
 
-class DataManagementCard extends StatelessWidget {
+class DataManagementCard extends StatefulWidget {
   const DataManagementCard({super.key});
+
+  @override
+  State<DataManagementCard> createState() => _DataManagementCardState();
+}
+
+class _DataManagementCardState extends State<DataManagementCard> {
+  bool _isSyncing = false;
+  DateTime? _lastSynced;
+
+  Future<void> _syncNow() async {
+    final authState = context.read<AuthCubit>().state;
+
+    if (authState is! AuthAuthenticated || authState.user.isAnonymous) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please log in to sync data.',
+            style: GoogleFonts.spaceGrotesk(),
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSyncing = true);
+
+    // Show the beautiful sync overlay dialog
+    SyncDialog.show(
+      context,
+      onCancel: () {
+        setState(() => _isSyncing = false);
+      },
+    );
+
+    try {
+      final habitsBox = Hive.box<HabitModel>('habitsBox');
+      final habits = habitsBox.values.toList();
+
+      // Also sync the user model
+      final userState = context.read<UserCubit>().state;
+      final user = userState is UserAuthenticated ? userState.user : null;
+
+      await SyncRepository.pushToCloud(
+        authState.user.uid,
+        habits,
+        userModel: user,
+      );
+
+      if (mounted) {
+        SyncDialog.hide();
+        setState(() {
+          _isSyncing = false;
+          _lastSynced = DateTime.now();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Data synced successfully! ✅',
+              style: GoogleFonts.spaceGrotesk(),
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      log('Manual sync failed: $e');
+      if (mounted) {
+        SyncDialog.hide();
+        setState(() => _isSyncing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Sync error: $e',
+              style: GoogleFonts.spaceGrotesk(fontSize: 12),
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 8),
+          ),
+        );
+      }
+    }
+  }
+
+  String _formatLastSynced() {
+    if (_lastSynced == null) return 'Not synced yet';
+    final diff = DateTime.now().difference(_lastSynced!);
+    if (diff.inSeconds < 60) return 'Synced just now';
+    if (diff.inMinutes < 60) return 'Synced ${diff.inMinutes}m ago';
+    return 'Synced ${diff.inHours}h ago';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -80,17 +186,9 @@ class DataManagementCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // Refresh button
+                          // Sync button
                           GestureDetector(
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Syncing...'),
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                            },
+                            onTap: _isSyncing ? null : _syncNow,
                             child: Container(
                               width: 36,
                               height: 36,
@@ -105,11 +203,19 @@ class DataManagementCard extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              child: const Icon(
-                                Icons.refresh_rounded,
-                                color: AppColors.primary,
-                                size: 18,
-                              ),
+                              child: _isSyncing
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.refresh_rounded,
+                                      color: AppColors.primary,
+                                      size: 18,
+                                    ),
                             ),
                           ),
                         ],
@@ -126,11 +232,11 @@ class DataManagementCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      // Progress bar
+                      // Progress bar — animated while syncing
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: LinearProgressIndicator(
-                          value: 0.85,
+                          value: _isSyncing ? null : 1.0,
                           minHeight: 5,
                           backgroundColor: AppColors.primary.withValues(
                             alpha: 0.15,
@@ -141,18 +247,20 @@ class DataManagementCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // Sync status
+                      // Last synced status
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          const Icon(
-                            Icons.check_circle_outline_rounded,
+                          Icon(
+                            _lastSynced != null
+                                ? Icons.check_circle_outline_rounded
+                                : Icons.cloud_off_outlined,
                             size: 12,
                             color: AppColors.textSecondary,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Synced 2m ago',
+                            _formatLastSynced(),
                             style: GoogleFonts.spaceGrotesk(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,

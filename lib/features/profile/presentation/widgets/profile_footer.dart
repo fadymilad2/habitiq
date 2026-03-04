@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
+import 'package:habit_iq/features/auth/presentation/manager/auth_cubit.dart';
+import 'package:habit_iq/features/auth/presentation/pages/auth_view.dart';
+import 'package:habit_iq/features/dashboard/presentation/manager/dashboard_cubit.dart';
 
 class ProfileFooter extends StatelessWidget {
   const ProfileFooter({super.key});
@@ -11,11 +15,14 @@ class ProfileFooter extends StatelessWidget {
         // Log out button
         TextButton(
           onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Logging out...'),
-                behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 2),
+            context.read<AuthCubit>().logout();
+            context.read<DashboardCubit>().changeTab(0);
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (_, a, b) => const AuthView(),
+                transitionsBuilder: (_, animation, b, child) =>
+                    FadeTransition(opacity: animation, child: child),
+                transitionDuration: const Duration(milliseconds: 500),
               ),
             );
           },

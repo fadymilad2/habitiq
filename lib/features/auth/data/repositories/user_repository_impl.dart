@@ -7,44 +7,48 @@ import 'package:habit_iq/features/profile/data/models/user_model.dart';
 /// Hive-backed implementation of [UserRepository].
 ///
 /// Storage strategy:
-///   • The app supports a single local user session.
-///   • The user is stored under the fixed key [_kUserKey] inside `userBox`.
-///   • All mutations (save / update / clear) are synchronous at the Hive level
-///     but exposed as `Future`s so the interface stays infrastructure-agnostic
-///     (easy to swap to a remote API later).
+///   • Each user is keyed by their actual userId (Firebase UID or guest UID).
+///   • This ensures per-account isolation — switching accounts never leaks
+///     XP, level, or profile data from a previous session.
+///   • The currently active userId is stored in [settingsBox] under
+///     [_kActiveUserIdKey] so [getCurrentUser] can find it after a restart.
 /// ─────────────────────────────────────────────────────────────────────────────
 class UserRepositoryImpl implements UserRepository {
-  /// Fixed Hive key under which the single local user session is stored.
-  static const String _kUserKey = 'current_user';
+  /// Settings box key that tracks which userId is currently active.
+  static const String _kActiveUserIdKey = 'active_user_id';
 
-  /// Typed reference to the Hive box opened by [HiveService].
   Box<UserModel> get _box => HiveService.userBox;
+  Box<dynamic> get _settings => HiveService.settingsBox;
 
   // ── Read ───────────────────────────────────────────────────────────────────
 
   @override
   UserModel? getCurrentUser() {
-    // Returns null if no user has been saved yet (first launch / after logout).
-    return _box.get(_kUserKey);
+    final userId = _settings.get(_kActiveUserIdKey) as String?;
+    if (userId == null) return null;
+    return _box.get(userId);
   }
 
   // ── Write ──────────────────────────────────────────────────────────────────
 
   @override
   Future<void> saveUser(UserModel user) async {
-    // Hive's put is synchronous on-device; await keeps the interface clean.
-    await _box.put(_kUserKey, user);
+    // Record the active user, then persist the model under their id.
+    await _settings.put(_kActiveUserIdKey, user.id);
+    await _box.put(user.id, user);
   }
 
   @override
   Future<void> updateUser(UserModel user) async {
-    // Functionally identical to saveUser — we overwrite by the same key.
-    // Having a named method makes intent crystal-clear at the call site.
-    await _box.put(_kUserKey, user);
+    // Key might not be set yet if called before saveUser; set it anyway.
+    await _settings.put(_kActiveUserIdKey, user.id);
+    await _box.put(user.id, user);
   }
 
   @override
   Future<void> clearUser() async {
-    await _box.delete(_kUserKey);
+    // Remove the active pointer but KEEP the user record in the box so
+    // logging back in with the same account restores data from cloud sync.
+    await _settings.delete(_kActiveUserIdKey);
   }
 }

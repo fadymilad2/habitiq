@@ -143,7 +143,7 @@ class AuthFormCard extends StatelessWidget {
                       obscureText: true,
                       textInputAction: TextInputAction.done,
                       validator: AppValidators.confirmPassword(
-                        passwordController.text,
+                        passwordController,
                       ),
                     ),
                   ],

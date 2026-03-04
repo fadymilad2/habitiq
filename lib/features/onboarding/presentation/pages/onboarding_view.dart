@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_iq/core/data/services/hive_service.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../widgets/onboarding_page.dart';
 import '../widgets/onboarding_top_bar.dart';
@@ -39,6 +40,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   /// Navigates to the Auth screen, removing the entire back-stack.
   void _navigateToAuth() {
+    HiveService.settingsBox.put('first_launch', false);
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, a, b) => const AuthView(),
