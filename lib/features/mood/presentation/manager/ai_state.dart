@@ -9,45 +9,60 @@ import 'package:fl_chart/fl_chart.dart';
 ///                         → AIError(error)
 /// ─────────────────────────────────────────────────────────────────────────────
 sealed class AIState extends Equatable {
-  const AIState();
-}
-
-/// No request has been made yet. The UI shows a default prompt.
-final class AIInitial extends AIState {
-  const AIInitial();
-  @override
-  List<Object?> get props => [];
-}
-
-/// A Gemini request is in-flight.
-final class AILoading extends AIState {
-  const AILoading();
-  @override
-  List<Object?> get props => [];
-}
-
-/// Gemini responded successfully.
-///
-/// [message]     — the 2-sentence motivational message from the model.
-/// [currentMood] — the mood label the user selected (e.g. "Happy").
-final class AILoaded extends AIState {
-  const AILoaded({
-    required this.message,
-    required this.currentMood,
+  const AIState({
     this.moodChartData = const [],
     this.habitChartData = const [],
     this.monthlyMoodCounts = const {},
     this.correlationValue = 0.0,
   });
 
-  final String message;
-  final String currentMood;
-
-  // Data for the Analytics UI in Mood Tab
   final List<FlSpot> moodChartData;
   final List<FlSpot> habitChartData;
   final Map<String, int> monthlyMoodCounts;
   final double correlationValue;
+
+  @override
+  List<Object?> get props => [
+    moodChartData,
+    habitChartData,
+    monthlyMoodCounts,
+    correlationValue,
+  ];
+}
+
+/// No request has been made yet. The UI shows a default prompt.
+final class AIInitial extends AIState {
+  const AIInitial({
+    super.moodChartData,
+    super.habitChartData,
+    super.monthlyMoodCounts,
+    super.correlationValue,
+  });
+}
+
+/// A Gemini request is in-flight.
+final class AILoading extends AIState {
+  const AILoading({
+    super.moodChartData,
+    super.habitChartData,
+    super.monthlyMoodCounts,
+    super.correlationValue,
+  });
+}
+
+/// Gemini responded successfully.
+final class AILoaded extends AIState {
+  const AILoaded({
+    required this.message,
+    required this.currentMood,
+    super.moodChartData,
+    super.habitChartData,
+    super.monthlyMoodCounts,
+    super.correlationValue,
+  });
+
+  final String message;
+  final String currentMood;
 
   @override
   List<Object?> get props => [
@@ -60,10 +75,24 @@ final class AILoaded extends AIState {
   ];
 }
 
-/// The request failed (network error, bad API key, quota exceeded, etc.).
+/// The request failed.
 final class AIError extends AIState {
-  const AIError(this.error);
+  const AIError(
+    this.error, {
+    super.moodChartData,
+    super.habitChartData,
+    super.monthlyMoodCounts,
+    super.correlationValue,
+  });
+
   final String error;
+
   @override
-  List<Object?> get props => [error];
+  List<Object?> get props => [
+    error,
+    moodChartData,
+    habitChartData,
+    monthlyMoodCounts,
+    correlationValue,
+  ];
 }

@@ -28,8 +28,6 @@ class ThisMonthSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AICubit, AIState>(
       builder: (context, state) {
-        if (state is! AILoaded) return const SizedBox.shrink();
-
         final counts = state.monthlyMoodCounts;
         final great = counts['great'] ?? 0;
         final okay = counts['okay'] ?? 0;

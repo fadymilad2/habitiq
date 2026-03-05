@@ -12,6 +12,7 @@ import 'package:habit_iq/features/habit/presentation/manager/habits_cubit.dart';
 import 'package:habit_iq/features/mood/presentation/manager/ai_cubit.dart';
 import 'package:habit_iq/features/profile/presentation/manager/user_cubit.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:habit_iq/core/services/notification_service.dart';
 import 'package:habit_iq/features/auth/presentation/manager/auth_cubit.dart';
 import 'package:habit_iq/features/splash/presentation/pages/splash_view.dart';
 import 'package:habit_iq/firebase_options.dart';
@@ -27,7 +28,28 @@ Future<void> main() async {
   //    Must complete before we create any Cubit that reads from Hive.
   await HiveService.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // 3. Launch the app.
+  // 3. Init local notifications.
+  await NotificationService.instance.init();
+  // 4. Re-schedule per-habit reminders if not globally paused.
+  final isPaused =
+      HiveService.settingsBox.get('isNotificationsPaused', defaultValue: false)
+          as bool;
+  if (!isPaused) {
+    final habitsBox = HiveService.habitsBox;
+    for (final habit in habitsBox.values) {
+      if (habit.hasReminder &&
+          habit.reminderTime != null &&
+          !habit.isCompletedToday) {
+        await NotificationService.instance.scheduleHabitReminder(
+          habit.id,
+          habit.title,
+          habit.reminderTime!.hour,
+          habit.reminderTime!.minute,
+        );
+      }
+    }
+  }
+  // 5. Launch the app.
   runApp(const HabitIq());
 }
 

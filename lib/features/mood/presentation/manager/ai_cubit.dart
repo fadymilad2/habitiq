@@ -26,7 +26,17 @@ class AICubit extends Cubit<AIState> {
   Map<String, int> _monthlyMoodCounts = {};
   double _correlationValue = 0.0;
 
-  void resetToInitial() => emit(const AIInitial());
+  void resetToInitial() => emit(
+    AIInitial(
+      moodChartData: _moodChartData,
+      habitChartData: _habitChartData,
+      monthlyMoodCounts: _monthlyMoodCounts,
+      correlationValue: _correlationValue,
+    ),
+  );
+
+  /// Refreshes the local analytics data (e.g. at midnight or when app resumes).
+  void refreshAnalytics() => _loadHistoricalData();
 
   /// Used on init to populate the charts even before the user logs a mood today.
   void _loadHistoricalData() {
@@ -37,6 +47,16 @@ class AICubit extends Cubit<AIState> {
         AILoaded(
           message: current.message,
           currentMood: current.currentMood,
+          moodChartData: _moodChartData,
+          habitChartData: _habitChartData,
+          monthlyMoodCounts: _monthlyMoodCounts,
+          correlationValue: _correlationValue,
+        ),
+      );
+    } else {
+      // Re-emit the current state (Initial, Loading, Error) but with updated data
+      emit(
+        AIInitial(
           moodChartData: _moodChartData,
           habitChartData: _habitChartData,
           monthlyMoodCounts: _monthlyMoodCounts,
@@ -79,11 +99,26 @@ class AICubit extends Cubit<AIState> {
     // 3. Call AI
     final apiKey = AppSecrets.geminiApiKey;
     if (apiKey.isEmpty || apiKey == 'PASTE_YOUR_API_KEY_HERE') {
-      emit(const AIError('نسيت تحط مفتاح Groq يا هندسة!'));
+      emit(
+        AIError(
+          'نسيت تحط مفتاح Groq يا هندسة!',
+          moodChartData: _moodChartData,
+          habitChartData: _habitChartData,
+          monthlyMoodCounts: _monthlyMoodCounts,
+          correlationValue: _correlationValue,
+        ),
+      );
       return;
     }
 
-    emit(const AILoading());
+    emit(
+      AILoading(
+        moodChartData: _moodChartData,
+        habitChartData: _habitChartData,
+        monthlyMoodCounts: _monthlyMoodCounts,
+        correlationValue: _correlationValue,
+      ),
+    );
 
     try {
       final completedList = completedHabits.isEmpty
@@ -141,11 +176,27 @@ Completed habits: $completedList
         );
       } else {
         log('Groq API Error: ${response.statusCode}');
-        emit(const AIError('معلش السيرفر واقع دلوقتي، جرب تاني كمان شوية.'));
+        emit(
+          AIError(
+            'معلش السيرفر واقع دلوقتي، جرب تاني كمان شوية.',
+            moodChartData: _moodChartData,
+            habitChartData: _habitChartData,
+            monthlyMoodCounts: _monthlyMoodCounts,
+            correlationValue: _correlationValue,
+          ),
+        );
       }
     } catch (e) {
       log('Unexpected Error: $e');
-      emit(const AIError('حصلت مشكلة في النت أو في قراءة الرد.'));
+      emit(
+        AIError(
+          'حصلت مشكلة في النت أو في قراءة الرد.',
+          moodChartData: _moodChartData,
+          habitChartData: _habitChartData,
+          monthlyMoodCounts: _monthlyMoodCounts,
+          correlationValue: _correlationValue,
+        ),
+      );
     }
   }
 
@@ -201,10 +252,29 @@ Completed habits: $completedList
 
     for (final m in moods) {
       if (m.date.year == now.year && m.date.month == now.month) {
-        final score = _moodStringToScore(m.moodType);
-        if (score >= 4.0) {
+        final moodScore = _moodStringToScore(m.moodType);
+
+        // Calculate habit completion percentage for this specific day
+        int doneToday = 0;
+        if (habits.isNotEmpty) {
+          doneToday = habits.where((h) {
+            return h.completionDates.any(
+              (d) => _zeroTime(d).isAtSameMomentAs(_zeroTime(m.date)),
+            );
+          }).length;
+        }
+
+        final double percentDone = habits.isEmpty
+            ? 0.0
+            : doneToday / habits.length;
+
+        // Combined Classification Logic:
+        // - If mood is Great (>= 4.0) OR you crushed your habits (>= 80%), it's a Great day.
+        // - If mood is Okay (>= 3.0) OR you managed to do half your habits (>= 50%), it's an Okay day.
+        // - Otherwise, it's a Low day.
+        if (moodScore >= 4.0 || percentDone >= 0.8) {
           great++;
-        } else if (score >= 3.0) {
+        } else if (moodScore >= 3.0 || percentDone >= 0.5) {
           okay++;
         } else {
           low++;

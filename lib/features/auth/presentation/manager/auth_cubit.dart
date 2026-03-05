@@ -43,6 +43,17 @@ class AuthCubit extends Cubit<AuthState> {
         password: password,
       );
       if (credentials.user != null) {
+        if (!credentials.user!.emailVerified) {
+          // Send verification again just in case they lost it
+          await credentials.user!.sendEmailVerification();
+          await _firebaseAuth.signOut();
+          emit(
+            const AuthError(
+              'Please verify your email to log in. A new link has been sent to your inbox.',
+            ),
+          );
+          return;
+        }
         await SyncRepository.pullFromCloud(
           credentials.user!.uid,
           Hive.box<HabitModel>('habitsBox'),
@@ -77,12 +88,12 @@ class AuthCubit extends Cubit<AuthState> {
         await credentials.user!.updateDisplayName(name);
         await credentials.user!.reload();
         final refreshedUser = _firebaseAuth.currentUser!;
-        await SyncRepository.pullFromCloud(
-          refreshedUser.uid,
-          Hive.box<HabitModel>('habitsBox'),
-          userBox: HiveService.userBox,
-        );
-        emit(AuthAuthenticated(refreshedUser));
+
+        // Prevent immediate access and send verification email
+        await refreshedUser.sendEmailVerification();
+        await _firebaseAuth.signOut();
+
+        emit(AuthVerificationSent(email));
       } else {
         emit(const AuthError('Registration failed. Please try again.'));
       }
@@ -91,6 +102,24 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       log('Register Error: $e');
       emit(AuthError('An unexpected error occurred: $e'));
+    }
+  }
+
+  /// Sends a password reset email to the given [email].
+  /// Throws an exception if the request fails, which the UI should catch.
+  Future<void> resetPassword(String email) async {
+    emit(const AuthLoading());
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      // Revert to unauthenticated so the login screen reappears normally
+      emit(const AuthUnauthenticated());
+    } on FirebaseAuthException catch (e) {
+      emit(const AuthUnauthenticated());
+      throw Exception(_handleAuthException(e));
+    } catch (e) {
+      emit(const AuthUnauthenticated());
+      log('Reset Password Error: $e');
+      throw Exception('An unexpected error occurred. Please try again.');
     }
   }
 
@@ -163,6 +192,19 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> logout() async {
     emit(const AuthLoading());
     try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null && !user.isAnonymous) {
+        try {
+          await SyncRepository.pushToCloud(
+            user.uid,
+            Hive.box<HabitModel>('habitsBox').values.toList(),
+            userModel: HiveService.userBox.get('currentUser'),
+          );
+        } catch (e) {
+          log('Logout Sync Error: Failed to push data before logout $e');
+        }
+      }
+
       await _googleSignIn.signOut();
       await _firebaseAuth.signOut();
       await HiveService.clearAllUserData();

@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:habit_iq/core/data/services/hive_service.dart';
+import 'package:habit_iq/core/services/notification_service.dart';
 import 'package:habit_iq/core/widgets/glow_toggle.dart';
 import 'package:habit_iq/core/theme/app_colors.dart';
 
@@ -97,7 +99,73 @@ class _PreferenceTile extends StatefulWidget {
 }
 
 class _PreferenceTileState extends State<_PreferenceTile> {
-  bool _switchValue = false;
+  // Read initial value from Hive (default: false — notifications are NOT paused)
+  late bool _switchValue =
+      HiveService.settingsBox.get('isNotificationsPaused', defaultValue: false)
+          as bool;
+
+  Future<void> _handleToggle(bool val) async {
+    setState(() => _switchValue = val);
+    // Persist to Hive: true = user wants to pause reminders
+    await HiveService.settingsBox.put('isNotificationsPaused', val);
+
+    if (val) {
+      // User turned Toggle ON -> Pause reminders
+      await NotificationService.instance.cancelAll();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'All reminders paused 🔕',
+              style: GoogleFonts.spaceGrotesk(),
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.grey.shade800,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } else {
+      // User turned Toggle OFF -> Unpause (Activate reminders)
+      await NotificationService.instance.requestPermissions();
+
+      // Reschedule all active habit reminders
+      final habitsBox = HiveService.habitsBox;
+      int rescheduledCount = 0;
+      for (final habit in habitsBox.values) {
+        if (habit.hasReminder &&
+            habit.reminderTime != null &&
+            !habit.isCompletedToday) {
+          await NotificationService.instance.scheduleHabitReminder(
+            habit.id,
+            habit.title,
+            habit.reminderTime!.hour,
+            habit.reminderTime!.minute,
+          );
+          rescheduledCount++;
+        }
+      }
+
+      // Fire an instant test notification so the user sees it works immediately
+      await NotificationService.instance.showInstantNotification();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              rescheduledCount > 0
+                  ? 'Reminders unpaused! $rescheduledCount habits scheduled. 🌟'
+                  : 'Reminders unpaused! Add a reminder to your habits. 🌟',
+              style: GoogleFonts.spaceGrotesk(),
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF7C3AED),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +173,7 @@ class _PreferenceTileState extends State<_PreferenceTile> {
       children: [
         InkWell(
           onTap: widget.tile.isSwitch
-              ? () => setState(() => _switchValue = !_switchValue)
+              ? () => _handleToggle(!_switchValue)
               : () {},
           borderRadius: BorderRadius.circular(20),
           splashColor: AppColors.primary.withValues(alpha: 0.08),
@@ -154,12 +222,9 @@ class _PreferenceTileState extends State<_PreferenceTile> {
                     ],
                   ),
                 ),
-                // Trailing: Switch OR optional label + chevron
+                // Trailing: GlowToggle for switches
                 if (widget.tile.isSwitch)
-                  GlowToggle(
-                    value: _switchValue,
-                    onChanged: (val) => setState(() => _switchValue = val),
-                  )
+                  GlowToggle(value: _switchValue, onChanged: _handleToggle)
                 else
                   const Icon(
                     Icons.chevron_right_rounded,

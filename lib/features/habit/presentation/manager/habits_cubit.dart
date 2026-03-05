@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:habit_iq/core/services/notification_service.dart';
 import 'package:habit_iq/features/habit/data/models/habit_model.dart' as hive;
 import 'package:habit_iq/features/habit/domain/repositories/habit_repository.dart';
 import 'package:habit_iq/features/habit/presentation/manager/habits_state.dart';
@@ -72,6 +73,15 @@ class HabitsCubit extends Cubit<HabitsState> {
           h.isCompletedToday = false;
           await _repo.updateHabit(h); // Persist the change
         }
+        // Every new day, reschedule reminders for all habits that want them.
+        if (h.hasReminder && h.reminderTime != null) {
+          await NotificationService.instance.scheduleHabitReminder(
+            h.id,
+            h.title,
+            h.reminderTime!.hour,
+            h.reminderTime!.minute,
+          );
+        }
       }
       loadTodayHabits(); // Reload habits to reflect changes
     } catch (e) {
@@ -104,6 +114,14 @@ class HabitsCubit extends Cubit<HabitsState> {
         reminderTime: reminderTime,
       );
       await _repo.addHabit(habit);
+      if (hasReminder && reminderTime != null) {
+        await NotificationService.instance.scheduleHabitReminder(
+          habit.id,
+          habit.title,
+          reminderTime.hour,
+          reminderTime.minute,
+        );
+      }
       loadTodayHabits();
     } catch (e) {
       emit(HabitsError(e.toString()));
@@ -132,12 +150,30 @@ class HabitsCubit extends Cubit<HabitsState> {
     }
 
     await _repo.updateHabit(habit);
+
+    // Notification Logic:
+    // If completed today, cancel the notification so it doesn't bother them.
+    // If unmarked (undo), reschedule it if they had a reminder set.
+    if (habit.hasReminder && habit.reminderTime != null) {
+      if (habit.isCompletedToday) {
+        await NotificationService.instance.cancelHabitReminder(habit.id);
+      } else {
+        await NotificationService.instance.scheduleHabitReminder(
+          habit.id,
+          habit.title,
+          habit.reminderTime!.hour,
+          habit.reminderTime!.minute,
+        );
+      }
+    }
+
     loadTodayHabits();
   }
 
   // ── Delete ─────────────────────────────────────────────────────────────────
 
   Future<void> deleteHabit(String id) async {
+    await NotificationService.instance.cancelHabitReminder(id);
     await _repo.deleteHabit(id);
     loadTodayHabits();
   }
@@ -154,6 +190,18 @@ class HabitsCubit extends Cubit<HabitsState> {
       habit.hasReminder = hasReminder;
       habit.reminderTime = reminderTime;
       await _repo.updateHabit(habit);
+
+      if (hasReminder && reminderTime != null && !habit.isCompletedToday) {
+        await NotificationService.instance.scheduleHabitReminder(
+          habitId,
+          habit.title,
+          reminderTime.hour,
+          reminderTime.minute,
+        );
+      } else {
+        await NotificationService.instance.cancelHabitReminder(habitId);
+      }
+
       loadTodayHabits(); // Refresh UI
     } catch (e) {
       emit(HabitsError(e.toString()));

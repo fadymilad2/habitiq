@@ -11,6 +11,7 @@ import 'package:habit_iq/features/dashboard/presentation/pages/main_dashboard_vi
 import '../widgets/auth_form_card.dart';
 import '../widgets/auth_guest_option.dart';
 import '../widgets/auth_header.dart';
+import '../widgets/forgot_password_dialog.dart';
 
 /// The main Authentication screen.
 ///
@@ -99,7 +100,11 @@ class _AuthViewState extends State<AuthView>
   }
 
   void _onForgotPassword() {
-    // TODO: navigate to forgot-password screen
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.8),
+      builder: (_) => const ForgotPasswordDialog(),
+    );
   }
 
   void _onGuestTap() {
@@ -121,6 +126,28 @@ class _AuthViewState extends State<AuthView>
             ),
           );
         }
+
+        if (state is AuthVerificationSent) {
+          // Switch back to login mode
+          if (!_isLogin) {
+            _toggleMode();
+          }
+          // Clear sensitive fields
+          _passwordController.clear();
+          _confirmController.clear();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Verification link sent to ${state.email}. Please verify to log in!',
+              ),
+              backgroundColor: const Color(0xFF7C3AED),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+
         // On any successful login:
         //  - For guest (anonymous): wipe Hive + create a fresh profile.
         //  - For all logins: reload cubits so stale data from a previous
