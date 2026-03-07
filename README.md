@@ -46,4 +46,3 @@ If you want to clone and test this project locally:
 
 - [LinkedIn](https://www.linkedin.com/in/fadymilad2)
 - [Portfolio](https://v0-portfolio-website-olive-eight.vercel.app/)
-- [GitHub](https://github.com/fadymilad)
