@@ -28,7 +28,7 @@ Building a habit tracker is common, but engineering a smart, reliable, and cost-
 ---
 
 ## 📸 Sneak Peek
-*(Add your video or screenshots here later by dragging and dropping them into this file on GitHub)*
+
 
 ---
 
@@ -39,3 +39,11 @@ If you want to clone and test this project locally:
 1. Clone the repository:
    ```bash
    git clone [https://github.com/fadymilad2/HabitIQ.git](https://github.com/fadymilad2/HabitIQ.git)
+
+   ## 👨‍💻 Developed By
+
+**Fady Milad** - Flutter Developer passionate about crafting clean, efficient, and user-centric mobile applications.
+
+* [LinkedIn](https://www.linkedin.com/in/fadymilad2)
+* [Portfolio](https://v0-portfolio-website-olive-eight.vercel.app/)
+* [GitHub](https://github.com/fadymilad)
