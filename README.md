@@ -29,7 +29,8 @@ Building a habit tracker is common, but engineering a smart, reliable, and cost-
 
 ## 📸 Sneak Peek
 
----
+![WhatsApp Image 2026-03-07 at 6 20 10 PM (2)](https://github.com/user-attachments/assets/edbebc9b-fdf3-487f-b245-f416868ce415)
+![WhatsApp Image 2026-03-07 at 6 20 10 PM (1)](https://github.com/user-attachments/assets/e8ce1895-a611-4c9b-bfa2-0b83fb65f5bc)
 
 ## 🚀 Getting Started
 
