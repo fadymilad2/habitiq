@@ -1,0 +1,24 @@
+﻿Analyzing habit_iq...                                           
+
+   info - Unnecessary use of multiple underscores - lib\features\profile\presentation\widgets\edit_profile_sheet.dart:91:27 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\profile\presentation\widgets\edit_profile_sheet.dart:91:31 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\profile\presentation\widgets\edit_profile_sheet.dart:98:27 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\profile\presentation\widgets\edit_profile_sheet.dart:98:31 - unnecessary_underscores
+
+flutter : 4 issues 
+found. (ran in 5.1s)
+At line:1 char:1
++ flutter analyze > 
+analyze_output.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (4 issues foun   
+ d. (ran in 5.1s):S    
+tring) [], RemoteE    
+xception
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 

@@ -1,4 +1,4 @@
-# habit_iq
+# HabitIQ
 
 A new Flutter project.
 
